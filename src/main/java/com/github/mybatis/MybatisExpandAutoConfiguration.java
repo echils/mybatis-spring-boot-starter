@@ -1,7 +1,7 @@
 package com.github.mybatis;
 
 /**
- * MybatisExpandAutoConfiguration
+ * Mybatis增强配置类
  *
  * @author echils
  */

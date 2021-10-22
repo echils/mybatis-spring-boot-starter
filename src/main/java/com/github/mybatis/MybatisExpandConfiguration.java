@@ -6,7 +6,7 @@ package com.github.mybatis;
  * @author echils
  */
 
-public class MybatisExpandAutoConfiguration {
+public class MybatisExpandConfiguration {
 
 
 }

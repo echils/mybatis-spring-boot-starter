@@ -16,7 +16,7 @@ public class Limit {
     private int index;
 
     /**
-     * 截取大小
+     * 长度
      */
     private int size;
 

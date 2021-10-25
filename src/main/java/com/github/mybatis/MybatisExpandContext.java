@@ -26,6 +26,15 @@ public class MybatisExpandContext {
      */
     public static final String CONDITION_BETWEEN_VALUE_CONNECTOR = "&";
 
+    /**
+     * 数据库类型-MySQL
+     */
+    public static final String MySQL = "MySQL";
+
+    /**
+     * 数据库类型-MariaDB
+     */
+    public static final String MariaDB = "MariaDB";
 
     /**
      * MYSQL关键字转义函数

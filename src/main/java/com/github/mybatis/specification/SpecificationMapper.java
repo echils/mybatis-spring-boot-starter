@@ -19,7 +19,7 @@ public interface SpecificationMapper<ID, T> extends DynamicMapper<T> {
      *
      * @param key 主键
      */
-    T findByPrimaryKey(ID key);
+    T selectByPrimaryKey(ID key);
 
 
     /**

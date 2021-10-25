@@ -1,4 +1,4 @@
-package com.github.mybatis;
+package com.github.mybatis.statement.loader;
 
 /**
  * 为拓展功能进行加载管理

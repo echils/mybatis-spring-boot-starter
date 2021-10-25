@@ -20,6 +20,6 @@ public @interface Table {
     /**
      * 指定对应的数据库表名,缺省时使用{}进行解析映射
      */
-    String name() default "";
+    String value();
 
 }

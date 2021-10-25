@@ -16,7 +16,7 @@ public @interface Column {
     /**
      * 指定对应的数据库列名,缺省时使用{}进行字段自动解析映射
      */
-    String value() default "";
+    String value();
 
 
     /**

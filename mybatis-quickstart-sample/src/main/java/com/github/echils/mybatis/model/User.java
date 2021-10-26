@@ -1,7 +1,6 @@
 package com.github.echils.mybatis.model;
 
 import com.github.mybatis.annotations.Column;
-import com.github.mybatis.annotations.LogicalDelete;
 import com.github.mybatis.annotations.Table;
 import com.github.mybatis.annotations.Where;
 import lombok.Data;
@@ -16,7 +15,6 @@ import java.util.Date;
 @Data
 @Table(value = "user")
 @Where(clause = "logical=true")
-@LogicalDelete(clause = "update set logical = false")
 public class User {
 
     /**
@@ -42,7 +40,7 @@ public class User {
     /**
      * 创建时间
      */
-    @Column(value = "create_time", nullable = false)
+    @Column(value = "create_time", nullable = false, defaultValue = "NOW()")
     private Date createTime;
 
     /**

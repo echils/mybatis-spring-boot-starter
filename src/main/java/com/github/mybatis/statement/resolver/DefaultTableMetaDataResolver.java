@@ -37,10 +37,6 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
             "table_name = %s AND table_schema = (SELECT DATABASE())";
 
 
-    public DefaultTableMetaDataResolver(SqlSession sqlSession) {
-        this.sqlSession = sqlSession;
-    }
-
     @Override
     public TableMetaData resolve(String tableName) {
 //        sqlSession.getConnection().createStatement().executeQuery()

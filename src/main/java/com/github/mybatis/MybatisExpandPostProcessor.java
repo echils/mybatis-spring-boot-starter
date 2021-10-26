@@ -1,6 +1,6 @@
 package com.github.mybatis;
 
-import com.github.mybatis.statement.MybatisStatementEnhancer;
+import com.github.mybatis.statement.ExpandStatementEnhancer;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.BeansException;
@@ -15,11 +15,11 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 @Slf4j
 public class MybatisExpandPostProcessor implements BeanPostProcessor {
 
-    private MybatisStatementEnhancer mybatisStatementEnhancer;
+    private ExpandStatementEnhancer expandStatementEnhancer;
 
     @Autowired
-    public MybatisExpandPostProcessor(MybatisStatementEnhancer mybatisStatementEnhancer) {
-        this.mybatisStatementEnhancer = mybatisStatementEnhancer;
+    public MybatisExpandPostProcessor(ExpandStatementEnhancer expandStatementEnhancer) {
+        this.expandStatementEnhancer = expandStatementEnhancer;
     }
 
     @Override
@@ -27,7 +27,7 @@ public class MybatisExpandPostProcessor implements BeanPostProcessor {
 
         if (bean instanceof MapperFactoryBean) {
             MapperFactoryBean<?> mapperFactoryBean = (MapperFactoryBean<?>) bean;
-            mybatisStatementEnhancer.enhance(mapperFactoryBean);
+            expandStatementEnhancer.enhance(mapperFactoryBean);
             log.debug("Enhance mapper [{}] complete ", mapperFactoryBean.getMapperInterface().getName());
         }
         return bean;

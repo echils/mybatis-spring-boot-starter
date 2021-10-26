@@ -1,9 +1,9 @@
 package com.github.mybatis.statement.resolver;
 
 /**
- * DefaultTableNameResolver
+ * 默认的表名称解析器
  *
  * @author echils
  */
-public class DefaultTableNameResolver {
+public class DefaultTableNameResolver implements TableNameResolver {
 }

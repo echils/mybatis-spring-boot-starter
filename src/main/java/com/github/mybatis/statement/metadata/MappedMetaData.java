@@ -21,7 +21,7 @@ public class MappedMetaData {
     /**
      * 映射器类信息
      */
-    private Class<?> mapperClass;
+    private Class<?> mapperInterface;
 
     /**
      * 映射器方法

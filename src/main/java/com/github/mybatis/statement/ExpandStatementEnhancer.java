@@ -58,7 +58,21 @@ public class ExpandStatementEnhancer {
      */
     public void enhance(MapperFactoryBean<?> mapperFactoryBean) {
 
+        Class<?> mapperInterface = mapperFactoryBean.getMapperInterface();
+
 
     }
 
+    /**
+     * 父子接口鉴定
+     *
+     * @param clazz       检测接口
+     * @param parentClazz 父接口
+     */
+    private boolean paternityInterfaceTest(Class<?> clazz, Class<?> parentClazz) {
+        if (clazz == null || parentClazz == null) {
+            return false;
+        }
+        return false;
+    }
 }

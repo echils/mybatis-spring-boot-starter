@@ -1,8 +1,10 @@
 package com.github.mybatis.statement.resolver;
 
+import com.github.mybatis.MybatisExpandException;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -18,6 +20,13 @@ import static com.github.mybatis.MybatisExpandContext.MySQL;
  */
 @Slf4j
 public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
+
+
+    @Autowired
+    private TableNameResolver tableNameResolver;
+
+    @Autowired
+    private ColumnNameResolver columnNameResolver;
 
     /**
      * 会话
@@ -38,12 +47,12 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
 
 
     @Override
-    public TableMetaData resolve(String tableName) {
-//        sqlSession.getConnection().createStatement().executeQuery()
+    public TableMetaData resolve(Class<?> entityClazz) {
+        String tableName = tableNameResolver.resolveTableName(entityClazz);
+
 
         return null;
     }
-
 
     /**
      * 判断是否数据库类型
@@ -57,7 +66,9 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
             }
             String databaseType = connection.getMetaData().getDatabaseProductName();
             return MySQL.equalsIgnoreCase(databaseType) || MariaDB.equalsIgnoreCase(databaseType);
-        } catch (SQLException e) { throw new IllegalStateException(e); }
+        } catch (SQLException e) {
+            throw new MybatisExpandException(e);
+        }
     }
 
 
@@ -71,7 +82,9 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
             String sql = String.format(TABLE_INFO_SQL, tableName);
             ResultSet resultSet = sqlSession.getConnection().createStatement().executeQuery(sql);
             return resultSet != null;
-        } catch (SQLException e) { throw new IllegalStateException(e); }
+        } catch (SQLException e) {
+            throw new MybatisExpandException(e);
+        }
     }
 
 

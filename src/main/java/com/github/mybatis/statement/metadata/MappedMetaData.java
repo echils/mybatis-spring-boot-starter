@@ -1,6 +1,8 @@
 package com.github.mybatis.statement.metadata;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 
 import java.lang.reflect.Method;
@@ -11,6 +13,8 @@ import java.lang.reflect.Method;
  * @author echils
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MappedMetaData {
 
     /**

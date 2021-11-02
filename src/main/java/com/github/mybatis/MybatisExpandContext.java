@@ -2,6 +2,7 @@ package com.github.mybatis;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -37,6 +38,11 @@ public class MybatisExpandContext {
     public static final String MariaDB = "MariaDB";
 
     /**
+     * 泛型Entity默认索引
+     */
+    public static final Integer ENTITY_RAW_INDEX = 1;
+
+    /**
      * MYSQL关键字转义函数
      */
     public static final Function<String, String> COLUMN_ESCAPE_FUNCTION = column -> {
@@ -51,5 +57,40 @@ public class MybatisExpandContext {
         return column;
     };
 
+    /**
+     * 驼峰转下划线函数
+     *
+     * 示例：HelloWorld-> hello_world
+     */
+    public static final Function<String, String> humpToUnderlineFunction = source -> {
+        if (StringUtils.isBlank(source)) { return source; }
+        StringBuilder builder = new StringBuilder();
+        char[] chars = source.toCharArray();
+        char firstChar = chars[0];
+        builder.append(firstChar >= 'A' && firstChar <= 'Z' ? Character.toLowerCase(firstChar) : firstChar);
+        for (int i = 1; i < chars.length; i++) {
+            char c = chars[i];
+            builder.append(c >= 'A' && c <= 'Z' ? "_" + Character.toLowerCase(c) : c);
+        }
+        return builder.toString();
+    };
+
+    /**
+     * 下划线转驼峰函数（如果first为false，跳过首字母）
+     *
+     * 示例： hello_world -> HelloWorld
+     */
+    public static final BiFunction<String, Boolean, String> underlineToHumpFunction = (source, first) -> {
+        StringBuilder builder = new StringBuilder();
+        char[] chars = source.toCharArray();
+        boolean upper = first;
+        for (char c : chars) {
+            if (c == '_') { upper = true; }else {
+                builder.append(upper ? Character.toUpperCase(c) : c);
+                upper = false;
+            }
+        }
+        return builder.toString();
+    };
 
 }

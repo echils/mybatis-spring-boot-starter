@@ -9,13 +9,11 @@ import com.github.mybatis.statement.metadata.TableMetaData;
  */
 public interface TableMetaDataResolver {
 
-
     /**
      * 解析实体类对应的表
      *
-     * @param tableName 表名称
+     * @param entityClazz 实体类
      */
-    TableMetaData resolve(String tableName);
-
+    TableMetaData resolve(Class<?> entityClazz);
 
 }

@@ -9,15 +9,13 @@ import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import com.github.mybatis.statement.resolver.TableMetaDataResolver;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.session.Configuration;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.github.mybatis.MybatisExpandContext.ENTITY_RAW_INDEX;
 
@@ -79,9 +77,15 @@ public class ExpandStatementEnhancer {
         TableMetaData tableMetaData = tableMetaDataResolver.resolve(entityClazz);
         Where whereAnnotation = entityClazz.getAnnotation(Where.class);
         String globalWhereClause = whereAnnotation == null ? null : whereAnnotation.clause();
+        Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
+        Collection<String> mappedStatementNames = configuration.getMappedStatementNames();
         Arrays.stream(mapperInterface.getMethods()).forEach(method -> {
             MappedMetaData mappedMetaData = new MappedMetaData(entityClazz, mapperInterface,
                     method, tableMetaData, globalWhereClause, mapperFactoryBean);
+            if (method.isDefault() || method.isBridge() ||
+                    mappedStatementNames.contains(mappedMetaData.getMappedStatementId())) {
+                return;
+            }
             Optional<ExpandStatementLoader> statementLoaderOptional
                     = expandStatementLoaders.stream().filter(expandStatementLoader
                     -> expandStatementLoader.match(mappedMetaData)).findFirst();
@@ -103,7 +107,7 @@ public class ExpandStatementEnhancer {
                 ParameterizedType parameterizedType = (ParameterizedType) genericInterface;
                 Class<?> parameterizedRawClazz = (Class<?>) parameterizedType.getRawType();
                 if (parameterizedRawClazz.isAssignableFrom(SpecificationMapper.class)
-                        || parameterizedRawClazz.isAssignableFrom(DynamicMapper.class)) {
+                    || parameterizedRawClazz.isAssignableFrom(DynamicMapper.class)) {
                     Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
                     Class<?> actualTypeClazz = (Class<?>)
                             actualTypeArguments[actualTypeArguments.length - ENTITY_RAW_INDEX];

@@ -47,4 +47,11 @@ public class MappedMetaData {
      */
     private MapperFactoryBean<?> mapperFactoryBean;
 
+    /**
+     * 获取Mybatis的statementId
+     */
+    public String getMappedStatementId() {
+        return mapperInterface.getName() + "." + mappedMethod.getName();
+    }
+
 }

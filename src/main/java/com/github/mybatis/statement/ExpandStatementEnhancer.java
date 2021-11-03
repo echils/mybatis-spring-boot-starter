@@ -67,18 +67,22 @@ public class ExpandStatementEnhancer {
      * 对原生映射器进行增强，注册拓展功能
      */
     public void enhance(MapperFactoryBean<?> mapperFactoryBean) {
+
         Class<?> mapperInterface = mapperFactoryBean.getMapperInterface();
         Optional<Class<?>> entityOptional = parseEntityClazz(mapperInterface);
         if (!entityOptional.isPresent()) {
             throw new MybatisExpandException("The enhance mapper [{" +
                     mapperInterface + "}] corresponding entity class is invalid");
         }
+
         Class<?> entityClazz = entityOptional.get();
-        TableMetaData tableMetaData = tableMetaDataResolver.resolve(entityClazz);
+        TableMetaData tableMetaData =
+                tableMetaDataResolver.resolve(mapperFactoryBean.getSqlSession(), entityClazz);
         Where whereAnnotation = entityClazz.getAnnotation(Where.class);
         String globalWhereClause = whereAnnotation == null ? null : whereAnnotation.clause();
         Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
         Collection<String> mappedStatementNames = configuration.getMappedStatementNames();
+
         Arrays.stream(mapperInterface.getMethods()).forEach(method -> {
             MappedMetaData mappedMetaData = new MappedMetaData(entityClazz, mapperInterface,
                     method, tableMetaData, globalWhereClause, mapperFactoryBean);

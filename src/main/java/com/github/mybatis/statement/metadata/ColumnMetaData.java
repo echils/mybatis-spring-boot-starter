@@ -16,17 +16,24 @@ public class ColumnMetaData {
      */
     private String name;
 
-
     /**
      * 是否是主键
      */
     private boolean primaryKey;
 
+    /**
+     * 是否可以为空
+     */
+    private boolean nullable;
+
+    /**
+     * 默认值
+     */
+    private String defaultValue;
 
     /**
      * Jdbc类型
      */
     private JdbcType jdbcType;
-
 
 }

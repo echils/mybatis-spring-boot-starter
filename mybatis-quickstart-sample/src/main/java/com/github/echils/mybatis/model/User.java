@@ -13,7 +13,7 @@ import java.util.Date;
  * @author echils
  */
 @Data
-@Table(value = "user")
+@Table(value = "`user`")
 @Where(clause = "logical=true")
 public class User {
 

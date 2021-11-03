@@ -20,7 +20,7 @@ public class TableMetaData {
 
 
     /**
-     * 列信息
+     * 列信息(实体类和数据库表匹配的列)
      */
     private List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
 

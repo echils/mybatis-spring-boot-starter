@@ -24,7 +24,7 @@ public class ColumnMetaData {
     /**
      * 是否可以为空
      */
-    private boolean nullable;
+    private boolean nullable = true;
 
     /**
      * 默认值
@@ -36,4 +36,8 @@ public class ColumnMetaData {
      */
     private JdbcType jdbcType;
 
+
+    public boolean isNullable() {
+        return !primaryKey && nullable;
+    }
 }

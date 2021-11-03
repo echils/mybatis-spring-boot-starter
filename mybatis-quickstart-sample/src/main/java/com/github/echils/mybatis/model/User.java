@@ -38,6 +38,16 @@ public class User {
     private String sex;
 
     /**
+     * 企业邮箱（数据库无此字段）
+     */
+    private String enterpriseMail;
+
+    /**
+     * 手机号（数据库无此字段）
+     */
+    private String telephone;
+
+    /**
      * 创建时间
      */
     @Column(value = "create_time", nullable = false, defaultValue = "NOW()")
@@ -46,6 +56,7 @@ public class User {
     /**
      * 逻辑列
      */
+    @Column(defaultValue = "true")
     private boolean logical;
 
 }

@@ -1,6 +1,8 @@
 package com.github.mybatis.statement.resolver;
 
 import com.github.mybatis.MybatisExpandException;
+import com.github.mybatis.annotations.Column;
+import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -8,13 +10,12 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.type.JdbcType;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.github.mybatis.MybatisExpandContext.MariaDB;
 import static com.github.mybatis.MybatisExpandContext.MySQL;
@@ -61,9 +62,27 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
         }
         TableMetaData tableMetaData = new TableMetaData();
         tableMetaData.setName(tableName);
-        List<DatabaseColumnInfo> databaseColumnInfos = obtainDatabaseColumnInfo(sqlSession, tableName);
-
-
+        Map<String, DatabaseColumnInfo> databaseColumnInfoMap
+                = obtainDatabaseColumnInfo(sqlSession, tableName).stream()
+                .collect(Collectors.toMap(DatabaseColumnInfo::getColumnName,
+                        databaseColumnInfo -> databaseColumnInfo));
+        tableMetaData.setColumnMetaDataList(obtainEntityFields(entityClazz).stream()
+                .map(field -> {
+                    ColumnMetaData columnMetaData = new ColumnMetaData();
+                    columnMetaData.setName(columnNameResolver.resolveTableName(field));
+                    Column tableAnnotation = field.getAnnotation(Column.class);
+                    if (tableAnnotation != null) {
+                        columnMetaData.setNullable(tableAnnotation.nullable());
+                        columnMetaData.setDefaultValue(tableAnnotation.defaultValue());
+                    }
+                    return columnMetaData;
+                })
+                .filter(columnMetaData -> databaseColumnInfoMap.containsKey(columnMetaData.getName()))
+                .peek(columnMetaData -> {
+                    DatabaseColumnInfo databaseColumnInfo = databaseColumnInfoMap.get(columnMetaData.getName());
+                    columnMetaData.setPrimaryKey(databaseColumnInfo.isPrimaryKey());
+                    columnMetaData.setJdbcType(databaseColumnInfo.getJdbcType());
+                }).collect(Collectors.toList()));
         return tableMetaData;
     }
 
@@ -130,12 +149,27 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
         return databaseColumnInfoList;
     }
 
+    /**
+     * 递归获取实体类所有属性
+     *
+     * @param entityClazz 实体类
+     */
+    private List<Field> obtainEntityFields(Class<?> entityClazz) {
+        if (entityClazz == null || entityClazz.isInterface()) {
+            return Collections.emptyList();
+        }
+        List<Field> fields = new ArrayList<>();
+        fields.addAll(obtainEntityFields(entityClazz.getSuperclass()));
+        fields.addAll(Arrays.asList(entityClazz.getDeclaredFields()));
+        return fields;
+    }
+
 
     /**
      * 数据库列信息
      */
     @Data
-    static class DatabaseColumnInfo {
+    private static class DatabaseColumnInfo {
 
         /**
          * 列名称

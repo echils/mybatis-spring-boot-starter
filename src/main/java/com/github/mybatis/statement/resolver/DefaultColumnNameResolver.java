@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 
+import static com.github.mybatis.MybatisExpandContext.UNDEFINED_LABEL;
 import static com.github.mybatis.MybatisExpandContext.humpToUnderlineFunction;
 
 /**
@@ -19,7 +20,9 @@ public class DefaultColumnNameResolver implements ColumnNameResolver {
         Column tableAnnotation = field.getAnnotation(Column.class);
         if (tableAnnotation != null) {
             String tableName = tableAnnotation.value();
-            if (StringUtils.isNotBlank(tableName)) { return tableName; }
+            if (StringUtils.isNotBlank(tableName) && !UNDEFINED_LABEL.equals(tableName)) {
+                return tableName;
+            }
         }
         return humpToUnderlineFunction.apply(field.getName());
     }

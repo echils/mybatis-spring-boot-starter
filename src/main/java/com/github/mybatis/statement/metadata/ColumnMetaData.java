@@ -12,9 +12,14 @@ import org.apache.ibatis.type.JdbcType;
 public class ColumnMetaData {
 
     /**
-     * 名称
+     * 数据库字段名称
      */
-    private String name;
+    private String columnName;
+
+    /**
+     * 实体类字段名称
+     */
+    private String fieldName;
 
     /**
      * 是否是主键
@@ -36,8 +41,15 @@ public class ColumnMetaData {
      */
     private JdbcType jdbcType;
 
+    /**
+     * Java类型
+     */
+    private Class<?> javaType;
+
 
     public boolean isNullable() {
         return !primaryKey && nullable;
     }
+
+
 }

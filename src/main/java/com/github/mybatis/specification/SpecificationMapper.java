@@ -104,22 +104,6 @@ public interface SpecificationMapper<ID, T> extends DynamicMapper<T> {
 
 
     /**
-     * 不存在就新增，存在就更新 (效果和JPA一样，某些时候很方便)
-     *
-     * @param entity 实体类
-     */
-    int save(T entity);
-
-
-    /**
-     * 批量新增或更新,不存在就新增，存在就更新 (效果和JPA一样，某些时候很方便)
-     *
-     * @param entities 实体类集合
-     */
-    int saveAll(Collection<T> entities);
-
-
-    /**
      * 统计总数
      */
     default int total() { return count(null); }

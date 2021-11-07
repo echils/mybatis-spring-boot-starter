@@ -9,13 +9,15 @@ import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import com.github.mybatis.statement.resolver.TableMetaDataResolver;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.session.Configuration;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static com.github.mybatis.MybatisExpandContext.ENTITY_RAW_INDEX;
 
@@ -46,13 +48,10 @@ public class ExpandStatementEnhancer {
     private void initStatementLoader() {
         expandStatementLoaders.add(new DynamicCountStatementLoader());
         expandStatementLoaders.add(new DynamicFindAllStatementLoader());
-        expandStatementLoaders.add(new DynamicMethodStatementLoader());
         expandStatementLoaders.add(new ExistByPrimaryKeyStatementLoader());
         expandStatementLoaders.add(new InsertBatchStatementLoader());
         expandStatementLoaders.add(new InsertSelectiveStatementLoader());
         expandStatementLoaders.add(new InsertStatementLoader());
-        expandStatementLoaders.add(new SaveStatementLoader());
-        expandStatementLoaders.add(new SaveAllStatementLoader());
         expandStatementLoaders.add(new SelectByPrimaryKeyStatementLoader());
         expandStatementLoaders.add(new UpdateBatchStatementLoader());
         expandStatementLoaders.add(new UpdateSelectiveBatchStatementLoader());
@@ -60,6 +59,7 @@ public class ExpandStatementEnhancer {
         expandStatementLoaders.add(new UpdateStatementLoader());
         expandStatementLoaders.add(new DeleteByPrimaryKeyStatementLoader());
         expandStatementLoaders.add(new DeleteByPrimaryKeysStatementLoader());
+        expandStatementLoaders.add(new DynamicMethodStatementLoader());
     }
 
 
@@ -80,22 +80,18 @@ public class ExpandStatementEnhancer {
                 tableMetaDataResolver.resolve(mapperFactoryBean.getSqlSession(), entityClazz);
         Where whereAnnotation = entityClazz.getAnnotation(Where.class);
         String globalWhereClause = whereAnnotation == null ? null : whereAnnotation.clause();
-        Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
-        Collection<String> mappedStatementNames = configuration.getMappedStatementNames();
 
-        Arrays.stream(mapperInterface.getMethods()).forEach(method -> {
+        Arrays.stream(mapperInterface.getMethods())
+                .filter(method -> !method.isDefault() && !method.isBridge()).forEach(method -> {
             MappedMetaData mappedMetaData = new MappedMetaData(entityClazz, mapperInterface,
                     method, tableMetaData, globalWhereClause, mapperFactoryBean);
-            if (method.isDefault() || method.isBridge() ||
-                    mappedStatementNames.contains(mappedMetaData.getMappedStatementId())) {
-                return;
-            }
             Optional<ExpandStatementLoader> statementLoaderOptional
                     = expandStatementLoaders.stream().filter(expandStatementLoader
                     -> expandStatementLoader.match(mappedMetaData)).findFirst();
             statementLoaderOptional.ifPresent(
                     expandStatementLoader -> expandStatementLoader.load(mappedMetaData));
         });
+
     }
 
 

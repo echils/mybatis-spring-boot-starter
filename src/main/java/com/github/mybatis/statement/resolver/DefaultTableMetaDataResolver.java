@@ -62,6 +62,7 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
         }
         TableMetaData tableMetaData = new TableMetaData();
         tableMetaData.setName(tableName);
+        tableMetaData.setEntityName(entityClazz.getSimpleName());
         Map<String, DatabaseColumnInfo> databaseColumnInfoMap
                 = obtainDatabaseColumnInfo(sqlSession, tableName).stream()
                 .collect(Collectors.toMap(DatabaseColumnInfo::getColumnName,
@@ -69,7 +70,9 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
         tableMetaData.setColumnMetaDataList(obtainEntityFields(entityClazz).stream()
                 .map(field -> {
                     ColumnMetaData columnMetaData = new ColumnMetaData();
-                    columnMetaData.setName(columnNameResolver.resolveTableName(field));
+                    columnMetaData.setColumnName(columnNameResolver.resolveTableName(field));
+                    columnMetaData.setJavaType(field.getType());
+                    columnMetaData.setFieldName(field.getName());
                     Column tableAnnotation = field.getAnnotation(Column.class);
                     if (tableAnnotation != null) {
                         columnMetaData.setNullable(tableAnnotation.nullable());
@@ -77,9 +80,9 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                     }
                     return columnMetaData;
                 })
-                .filter(columnMetaData -> databaseColumnInfoMap.containsKey(columnMetaData.getName()))
+                .filter(columnMetaData -> databaseColumnInfoMap.containsKey(columnMetaData.getColumnName()))
                 .peek(columnMetaData -> {
-                    DatabaseColumnInfo databaseColumnInfo = databaseColumnInfoMap.get(columnMetaData.getName());
+                    DatabaseColumnInfo databaseColumnInfo = databaseColumnInfoMap.get(columnMetaData.getColumnName());
                     columnMetaData.setPrimaryKey(databaseColumnInfo.isPrimaryKey());
                     columnMetaData.setJdbcType(databaseColumnInfo.getJdbcType());
                 }).collect(Collectors.toList()));

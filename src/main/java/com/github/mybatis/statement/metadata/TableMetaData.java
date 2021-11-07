@@ -20,6 +20,12 @@ public class TableMetaData {
 
 
     /**
+     * 实体类名称
+     */
+    private String entityName;
+
+
+    /**
      * 列信息(实体类和数据库表匹配的列)
      */
     private List<ColumnMetaData> columnMetaDataList = new ArrayList<>();

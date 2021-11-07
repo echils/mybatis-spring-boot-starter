@@ -48,6 +48,11 @@ public class MybatisExpandContext {
     public static final String UNDEFINED_LABEL = "UNDEFINED";
 
     /**
+     * 内置结果集名称
+     */
+    public static final String EXPAND_DEFAULT_RESULT_MAP = "ExpandDefaultResultMap";
+
+    /**
      * MYSQL关键字转义函数
      */
     public static final Function<String, String> COLUMN_ESCAPE_FUNCTION = column -> {

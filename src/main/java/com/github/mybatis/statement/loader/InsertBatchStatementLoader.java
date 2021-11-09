@@ -16,7 +16,8 @@ public class InsertBatchStatementLoader extends AbstractExpandStatementLoader {
     /**
      * 拓展方法名
      */
-    private static final String EXPAND_STATEMENT_METHOD = "insertBatch";
+    private static final String EXPAND_STATEMENT_METHOD
+            = "com.github.mybatis.specification.SpecificationMapper.insertBatch";
 
     @Override
     SqlCommandType sqlCommandType() {
@@ -30,7 +31,7 @@ public class InsertBatchStatementLoader extends AbstractExpandStatementLoader {
 
     @Override
     public boolean match(MappedMetaData mappedMetaData) {
-        return EXPAND_STATEMENT_METHOD.equals(mappedMetaData.getMappedMethod().getName());
+        return mappedMetaData.getMappedMethod().toString().contains(EXPAND_STATEMENT_METHOD);
     }
 
 }

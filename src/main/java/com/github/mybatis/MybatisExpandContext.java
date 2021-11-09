@@ -48,9 +48,9 @@ public class MybatisExpandContext {
     public static final String UNDEFINED_LABEL = "UNDEFINED";
 
     /**
-     * 内置结果集名称
+     * 内置结果集名称后缀
      */
-    public static final String EXPAND_DEFAULT_RESULT_MAP = "ExpandDefaultResultMap";
+    public static final String EXPAND_DEFAULT_RESULT_MAP = "ExpandResultMap";
 
     /**
      * MYSQL关键字转义函数

@@ -10,6 +10,7 @@ import org.apache.ibatis.session.Configuration;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,19 +59,20 @@ public class MappedMetaData {
     private MapperFactoryBean<?> mapperFactoryBean;
 
     /**
-     * 获取Mybatis的statementId
+     * 获取Mybatis的StatementId
      */
     public String getMappedStatementId() {
         return mapperInterface.getName() + "." + mappedMethod.getName();
     }
 
     /**
-     * 根据实体类解析结果集
+     * 解析Statement结果集
      */
-    public ResultMap getDefaultResultMap() {
+    public ResultMap getMappedStatementResultMap() {
+
+        Type genericReturnType = mappedMethod.getGenericReturnType();
 
         String resultMapId = mapperInterface.getName() + "." + EXPAND_DEFAULT_RESULT_MAP;
-
         Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
         if (configuration.hasResultMap(resultMapId)) {
             return configuration.getResultMap(resultMapId);

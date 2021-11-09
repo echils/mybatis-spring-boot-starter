@@ -116,8 +116,7 @@ public class ExpandStatementEnhancer {
                     }
                 }
             } else if (genericInterface instanceof Class) {
-                Optional<Class<?>> clazzOptional =
-                        parseEntityClazz((Class<?>) genericInterface);
+                Optional<Class<?>> clazzOptional = parseEntityClazz((Class<?>) genericInterface);
                 if (clazzOptional.isPresent()) { return clazzOptional; }
             }
         }

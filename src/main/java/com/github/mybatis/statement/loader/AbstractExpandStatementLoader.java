@@ -40,6 +40,7 @@ public abstract class AbstractExpandStatementLoader implements ExpandStatementLo
         boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
         String namespace = mappedMetaData.getMapperInterface().getName();
         boolean hasCache = configuration.hasCache(namespace);
+
         MappedStatement mappedStatement = new MappedStatement.Builder(configuration,
                 mappedStatementId, sqlSourceBuild(mappedMetaData), sqlCommandType)
                 .resource(namespace)
@@ -48,7 +49,7 @@ public abstract class AbstractExpandStatementLoader implements ExpandStatementLo
                 .resultSetType(configuration.getDefaultResultSetType())
                 .flushCacheRequired(hasCache && !isSelect)
                 .useCache(hasCache && isSelect)
-                .resultMaps(Collections.singletonList(mappedMetaData.getDefaultResultMap()))
+                .resultMaps(Collections.singletonList(mappedMetaData.getMappedStatementResultMap()))
                 .cache(hasCache ? configuration.getCache(namespace) : null).build();
 
         Optional<MappedStatement> statementOptional = Optional.ofNullable(mappedStatement);

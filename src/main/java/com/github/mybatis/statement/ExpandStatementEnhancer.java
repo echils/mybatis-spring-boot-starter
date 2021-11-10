@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -109,10 +110,15 @@ public class ExpandStatementEnhancer {
                 if (parameterizedRawClazz.isAssignableFrom(SpecificationMapper.class)
                     || parameterizedRawClazz.isAssignableFrom(DynamicMapper.class)) {
                     Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                    Class<?> actualTypeClazz = (Class<?>)
-                            actualTypeArguments[actualTypeArguments.length - ENTITY_RAW_INDEX];
-                    if (!actualTypeClazz.isAssignableFrom(Object.class)) {
-                        return Optional.of(actualTypeClazz);
+                    Type actualTypeArgument = actualTypeArguments[actualTypeArguments.length - ENTITY_RAW_INDEX];
+                    if (actualTypeArgument instanceof TypeVariable) {
+                        return Optional.empty();
+                    }
+                    if (actualTypeArgument instanceof Class) {
+                        Class<?> actualTypeClazz = (Class<?>) actualTypeArgument;
+                        if (!actualTypeClazz.isAssignableFrom(Object.class)) {
+                            return Optional.of(actualTypeClazz);
+                        }
                     }
                 }
             } else if (genericInterface instanceof Class) {

@@ -1,8 +1,6 @@
 package com.github.mybatis.statement.metadata;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.ResultMapping;
@@ -10,7 +8,6 @@ import org.apache.ibatis.session.Configuration;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,9 +20,7 @@ import static com.github.mybatis.MybatisExpandContext.EXPAND_DEFAULT_RESULT_MAP;
  *
  * @author echils
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
 public class MappedMetaData {
 
     /**
@@ -59,39 +54,70 @@ public class MappedMetaData {
     private MapperFactoryBean<?> mapperFactoryBean;
 
     /**
+     * 实体类默认结果集
+     */
+    private ResultMap entityResultMap;
+
+
+    public MappedMetaData(Class<?> entityClass, Class<?> mapperInterface,
+                          Method mappedMethod, TableMetaData tableMetaData,
+                          String whereClause, MapperFactoryBean<?> mapperFactoryBean) {
+
+        this.entityClass = entityClass;
+        this.mapperInterface = mapperInterface;
+        this.mappedMethod = mappedMethod;
+        this.tableMetaData = tableMetaData;
+        this.whereClause = whereClause;
+        this.mapperFactoryBean = mapperFactoryBean;
+    }
+
+
+    /**
      * 获取Mybatis的StatementId
      */
     public String getMappedStatementId() {
         return mapperInterface.getName() + "." + mappedMethod.getName();
     }
 
+
     /**
      * 解析Statement结果集
      */
     public ResultMap getMappedStatementResultMap() {
 
-        Type genericReturnType = mappedMethod.getGenericReturnType();
+        Class<?> returnType = mappedMethod.getReturnType();
 
-        String resultMapId = mapperInterface.getName() + "." + EXPAND_DEFAULT_RESULT_MAP;
-        Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
-        if (configuration.hasResultMap(resultMapId)) {
-            return configuration.getResultMap(resultMapId);
+
+
+
+        return null;
+    }
+
+
+    /**
+     * 获取实体类对应的结果集
+     */
+    private ResultMap getEntityResultMap() {
+        if (entityResultMap == null) {
+            String resultMapId = mapperInterface.getName() + "." + EXPAND_DEFAULT_RESULT_MAP;
+            Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
+            if (configuration.hasResultMap(resultMapId)) {
+                entityResultMap = configuration.getResultMap(resultMapId);
+            } else {
+                List<ResultMapping> resultMappingList = tableMetaData.getColumnMetaDataList()
+                        .stream().map(columnMetaData -> {
+                            List<ResultFlag> flags = columnMetaData.isPrimaryKey() ?
+                                    Collections.singletonList(ResultFlag.ID) : new ArrayList<>();
+                            return new ResultMapping.Builder(configuration,
+                                    columnMetaData.getFieldName(), columnMetaData.getColumnName(),
+                                    columnMetaData.getJavaType())
+                                    .jdbcType(columnMetaData.getJdbcType()).flags(flags).build();
+                        }).collect(Collectors.toList());
+                entityResultMap = new ResultMap
+                        .Builder(configuration, resultMapId, entityClass, resultMappingList).build();
+            }
         }
-
-        List<ResultMapping> resultMappingList = tableMetaData.getColumnMetaDataList()
-                .stream().map(columnMetaData -> {
-                    List<ResultFlag> flags = columnMetaData.isPrimaryKey() ?
-                            Collections.singletonList(ResultFlag.ID) : new ArrayList<>();
-                    return new ResultMapping.Builder(configuration,
-                            columnMetaData.getFieldName(), columnMetaData.getColumnName(),
-                            columnMetaData.getJavaType())
-                            .jdbcType(columnMetaData.getJdbcType()).flags(flags).build();
-                }).collect(Collectors.toList());
-
-        ResultMap resultMap = new ResultMap
-                .Builder(configuration, resultMapId, entityClass, resultMappingList).build();
-        configuration.addResultMap(resultMap);
-        return resultMap;
+        return entityResultMap;
     }
 
 }

@@ -2,10 +2,7 @@ package com.github.mybatis.statement.loader;
 
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.SqlCommandType;
-import org.apache.ibatis.mapping.SqlSource;
-import org.apache.ibatis.mapping.StatementType;
+import org.apache.ibatis.mapping.*;
 import org.apache.ibatis.session.Configuration;
 
 import java.util.Collection;
@@ -41,6 +38,7 @@ public abstract class AbstractExpandStatementLoader implements ExpandStatementLo
         String namespace = mappedMetaData.getMapperInterface().getName();
         boolean hasCache = configuration.hasCache(namespace);
 
+        ResultMap resultMap = mappedMetaData.getMappedStatementResultMap();
         MappedStatement mappedStatement = new MappedStatement.Builder(configuration,
                 mappedStatementId, sqlSourceBuild(mappedMetaData), sqlCommandType)
                 .resource(namespace)
@@ -49,14 +47,13 @@ public abstract class AbstractExpandStatementLoader implements ExpandStatementLo
                 .resultSetType(configuration.getDefaultResultSetType())
                 .flushCacheRequired(hasCache && !isSelect)
                 .useCache(hasCache && isSelect)
-                .resultMaps(Collections.singletonList(mappedMetaData.getMappedStatementResultMap()))
+                .resultMaps(Collections.singletonList(resultMap))
                 .cache(hasCache ? configuration.getCache(namespace) : null).build();
 
+        configuration.addResultMap(resultMap);
         Optional<MappedStatement> statementOptional = Optional.ofNullable(mappedStatement);
         statementOptional.ifPresent(configuration::addMappedStatement);
-
         return statementOptional;
-
     }
 
 

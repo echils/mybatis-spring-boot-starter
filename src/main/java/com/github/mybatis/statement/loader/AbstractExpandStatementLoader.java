@@ -50,7 +50,7 @@ public abstract class AbstractExpandStatementLoader implements ExpandStatementLo
                 .resultMaps(Collections.singletonList(resultMap))
                 .cache(hasCache ? configuration.getCache(namespace) : null).build();
 
-        configuration.addResultMap(resultMap);
+        tryAddResultMapToConfiguration(configuration, resultMap);
         Optional<MappedStatement> statementOptional = Optional.ofNullable(mappedStatement);
         statementOptional.ifPresent(configuration::addMappedStatement);
         return statementOptional;
@@ -70,5 +70,14 @@ public abstract class AbstractExpandStatementLoader implements ExpandStatementLo
      */
     abstract SqlSource sqlSourceBuild(MappedMetaData mappedMetaData);
 
+
+    /**
+     * 尝试添加ResultMap
+     */
+    private void tryAddResultMapToConfiguration(Configuration configuration, ResultMap resultMap) {
+        if (!configuration.hasResultMap(resultMap.getId())) {
+            configuration.addResultMap(resultMap);
+        }
+    }
 
 }

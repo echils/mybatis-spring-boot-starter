@@ -74,10 +74,9 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                     columnMetaData.setColumnName(columnNameResolver.resolveTableName(field));
                     columnMetaData.setJavaType(field.getType());
                     columnMetaData.setFieldName(field.getName());
-                    Column tableAnnotation = field.getAnnotation(Column.class);
-                    if (tableAnnotation != null) {
-                        columnMetaData.setNullable(tableAnnotation.nullable());
-                        columnMetaData.setDefaultValue(tableAnnotation.defaultValue());
+                    Column columnAnnotation = field.getAnnotation(Column.class);
+                    if (columnAnnotation != null) {
+                        columnMetaData.setDefaultValue(columnAnnotation.defaultValue());
                     }
                     return columnMetaData;
                 })

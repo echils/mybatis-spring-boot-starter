@@ -1,5 +1,6 @@
 package com.github.mybatis.statement.loader;
 
+import com.github.mybatis.specification.SpecificationMapper;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -17,7 +18,7 @@ public class ExistByPrimaryKeyStatementLoader extends AbstractExpandStatementLoa
      * 拓展方法名
      */
     private static final String EXPAND_STATEMENT_METHOD
-            = "com.github.mybatis.specification.SpecificationMapper.existByPrimaryKey";
+            = SpecificationMapper.class.getName() + ".existByPrimaryKey";
 
 
     @Override

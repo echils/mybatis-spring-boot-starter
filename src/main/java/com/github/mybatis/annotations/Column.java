@@ -22,13 +22,6 @@ public @interface Column {
 
 
     /**
-     * 是否可以为空，默认为true
-     * 如果为false，当属性没有自定义赋值且没有指定默认值时将抛异常提醒
-     */
-    boolean nullable() default true;
-
-
-    /**
      * 默认值
      * 默认值生效的前提实体类属性没有自定义赋值并且默认值不为【UNDEFINED】
      * 默认值除基本数据类型外，也可以使用数据库函数

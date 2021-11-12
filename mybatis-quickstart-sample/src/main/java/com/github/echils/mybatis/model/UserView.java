@@ -41,7 +41,7 @@ public class UserView {
     /**
      * 创建时间
      */
-    @Column(value = "create_time", nullable = false, defaultValue = "NOW()")
+    @Column(defaultValue = "NOW()")
     private Date createTime;
 
     /**

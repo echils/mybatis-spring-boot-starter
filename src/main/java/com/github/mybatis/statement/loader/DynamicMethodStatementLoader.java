@@ -13,8 +13,6 @@ import org.apache.ibatis.mapping.SqlSource;
 @Slf4j
 public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader {
 
-
-
     @Override
     SqlCommandType sqlCommandType() {
         return null;

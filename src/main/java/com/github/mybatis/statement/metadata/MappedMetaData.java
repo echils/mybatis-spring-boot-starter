@@ -1,5 +1,7 @@
 package com.github.mybatis.statement.metadata;
 
+import com.github.mybatis.specification.DynamicMapper;
+import com.github.mybatis.specification.SpecificationMapper;
 import lombok.Getter;
 import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.mapping.ResultMap;
@@ -84,23 +86,34 @@ public class MappedMetaData {
      * 解析Statement结果集
      */
     public ResultMap getMappedStatementResultMap() {
-
+        Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
         Class<?> returnType = mappedMethod.getReturnType();
-
-
-
-
-        return null;
+        String defaultMappedId = getMappedStatementId() + "-" + EXPAND_DEFAULT_RESULT_MAP;
+        if (isExpandMethod(mappedMethod)) {
+            return returnType.isPrimitive() ? new ResultMap.Builder(configuration,
+                    defaultMappedId, returnType, Collections.emptyList()).build() : getEntityResultMap(configuration);
+        }
+        if (entityClass.isAssignableFrom(returnType)) {
+            return getEntityResultMap(configuration);
+        } else if (returnType.isArray()) {
+            returnType = returnType.getComponentType();
+            if (entityClass.isAssignableFrom(returnType)) {
+                return getEntityResultMap(configuration);
+            }
+        }
+        if (returnType.isPrimitive()) {
+            return new ResultMap.Builder(configuration, defaultMappedId, returnType, Collections.emptyList()).build();
+        }
+        return new ResultMap.Builder(configuration, defaultMappedId, Object.class, Collections.emptyList()).build();
     }
 
 
     /**
      * 获取实体类对应的结果集
      */
-    private ResultMap getEntityResultMap() {
+    private ResultMap getEntityResultMap(Configuration configuration) {
         if (entityResultMap == null) {
             String resultMapId = mapperInterface.getName() + "." + EXPAND_DEFAULT_RESULT_MAP;
-            Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
             if (configuration.hasResultMap(resultMapId)) {
                 entityResultMap = configuration.getResultMap(resultMapId);
             } else {
@@ -118,6 +131,16 @@ public class MappedMetaData {
             }
         }
         return entityResultMap;
+    }
+
+
+    /**
+     * 是否内置拓展增强方法
+     */
+    private boolean isExpandMethod(Method method) {
+        String methodString = method.toString();
+        return methodString.contains(SpecificationMapper.class.getName()) ||
+                methodString.contains(DynamicMapper.class.getName());
     }
 
 }

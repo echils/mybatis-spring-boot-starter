@@ -50,7 +50,7 @@ public class User {
     /**
      * 创建时间
      */
-    @Column(value = "create_time", nullable = false, defaultValue = "NOW()")
+    @Column(value = "create_time", defaultValue = "NOW()")
     private Date createTime;
 
     /**

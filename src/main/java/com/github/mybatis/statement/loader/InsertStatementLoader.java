@@ -5,15 +5,17 @@ import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.*;
 import org.apache.ibatis.session.Configuration;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.github.mybatis.MybatisExpandContext.COLUMN_ESCAPE_FUNCTION;
+import static com.github.mybatis.MybatisExpandContext.*;
 
 /**
  * 插入功能加载器
@@ -39,20 +41,20 @@ public class InsertStatementLoader extends AbstractExpandStatementLoader {
 
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
-
         TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
-
         List<SqlNode> sqlNodes = new LinkedList<>();
         List<SqlNode> columnSqlNodes = new LinkedList<>();
-        List<SqlNode> propertySqlNodes = new LinkedList<>();
+        List<SqlNode> paramSqlNodes = new LinkedList<>();
 
         for (ColumnMetaData columnMetaData : tableMetaData.getColumnMetaDataList()) {
-
-            StaticTextSqlNode columnSqlNode =
-                    new StaticTextSqlNode(COLUMN_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()));
-
+            StaticTextSqlNode paramSqlNode = new StaticTextSqlNode(String.format(MYBATIS_PARAM_EXPRESSION,
+                    columnMetaData.getFieldName(), columnMetaData.getJdbcType()) + ",");
+            paramSqlNodes.add(StringUtils.isNotBlank(columnMetaData.getDefaultValue()) ?
+                    new ChooseSqlNode(Collections.singletonList(new IfSqlNode(paramSqlNode,
+                            String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName()))),
+                            new StaticTextSqlNode(columnMetaData.getDefaultValue() + ",")) : paramSqlNode);
+            columnSqlNodes.add(new StaticTextSqlNode(COLUMN_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
         }
-
 
         sqlNodes.add(new StaticTextSqlNode("INSERT INTO " +
                 COLUMN_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
@@ -60,7 +62,7 @@ public class InsertStatementLoader extends AbstractExpandStatementLoader {
                 new MixedSqlNode(columnSqlNodes), " (", null,
                 ") ", ","));
         sqlNodes.add(new TrimSqlNode(configuration,
-                new MixedSqlNode(propertySqlNodes), " VALUES (", null,
+                new MixedSqlNode(paramSqlNodes), " VALUES (", null,
                 ")", ","));
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }

@@ -1,10 +1,21 @@
 package com.github.mybatis.statement.loader;
 
 import com.github.mybatis.specification.SpecificationMapper;
+import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
+import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
+import org.apache.ibatis.scripting.xmltags.*;
+import org.apache.ibatis.session.Configuration;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import static com.github.mybatis.MybatisExpandContext.*;
 
 /**
  * 选择插入功能加载器
@@ -22,12 +33,45 @@ public class InsertSelectiveStatementLoader extends AbstractExpandStatementLoade
 
     @Override
     SqlCommandType sqlCommandType() {
-        return null;
+        return SqlCommandType.INSERT;
     }
 
     @Override
     SqlSource sqlSourceBuild(MappedMetaData mappedMetaData) {
-        return null;
+
+        TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
+        List<SqlNode> sqlNodes = new LinkedList<>();
+        List<SqlNode> columnSqlNodes = new LinkedList<>();
+        List<SqlNode> paramSqlNodes = new LinkedList<>();
+
+        for (ColumnMetaData columnMetaData : tableMetaData.getColumnMetaDataList()) {
+            StaticTextSqlNode paramSqlNode = new StaticTextSqlNode(String.format(MYBATIS_PARAM_EXPRESSION,
+                    columnMetaData.getFieldName(), columnMetaData.getJdbcType()) + ",");
+            String defaultValue = columnMetaData.getDefaultValue();
+            if (StringUtils.isNotBlank(defaultValue)) {
+                //有默认值时，此列不用不满足selective规则
+                paramSqlNodes.add(StringUtils.isNotBlank(defaultValue) ? new ChooseSqlNode(Collections.singletonList(
+                        new IfSqlNode(paramSqlNode, String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName()))),
+                        new StaticTextSqlNode(columnMetaData.getDefaultValue() + ",")) : paramSqlNode);
+                columnSqlNodes.add(new StaticTextSqlNode(COLUMN_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
+            } else {
+                columnSqlNodes.add(new IfSqlNode(new StaticTextSqlNode(COLUMN_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","),
+                        String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName())));
+                paramSqlNodes.add(new IfSqlNode(paramSqlNode, String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName())));
+            }
+        }
+
+        sqlNodes.add(new StaticTextSqlNode("INSERT INTO " +
+                COLUMN_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
+        Configuration configuration =
+                mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
+        sqlNodes.add(new TrimSqlNode(configuration,
+                new MixedSqlNode(columnSqlNodes), " (", null,
+                ") ", ","));
+        sqlNodes.add(new TrimSqlNode(configuration,
+                new MixedSqlNode(paramSqlNodes), " VALUES (", null,
+                ")", ","));
+        return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 
     @Override

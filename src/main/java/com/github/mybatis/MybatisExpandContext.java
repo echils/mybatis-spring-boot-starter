@@ -53,6 +53,22 @@ public class MybatisExpandContext {
     public static final String EXPAND_DEFAULT_RESULT_MAP = "ExpandResultMap";
 
     /**
+     * Mybatis XML 参数表达式
+     */
+    public static final String MYBATIS_FOREACH_PARAM = "item";
+
+    /**
+     * Mybatis XML 参数表达式
+     */
+    public static final String MYBATIS_PARAM_EXPRESSION = "#{%s,jdbcType=%s}";
+
+    /**
+     * Mybatis XML 参数表达式
+     */
+    public static final String MYBATIS_TEST_EXPRESSION = "%s != null";
+
+
+    /**
      * MYSQL关键字转义函数
      */
     public static final Function<String, String> COLUMN_ESCAPE_FUNCTION = column -> {

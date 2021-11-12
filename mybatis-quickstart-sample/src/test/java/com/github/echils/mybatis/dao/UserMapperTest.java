@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Date;
+import java.util.Arrays;
 
 /**
  * UserMapperTest
@@ -30,14 +30,29 @@ public class UserMapperTest {
         user.setId("666");
         user.setName("echils");
         user.setAge(25);
-        user.setCreateTime(new Date());
         user.setSex("男");
         user.setLogical(true);
     }
 
+//    @Test
+//    public void testInsert() {
+//        userMapper.insert(user);
+//    }
+
+//    @Test
+//    public void insertSelective() {
+//        userMapper.insertSelective(user);
+//    }
+
     @Test
-    public void testInsert() {
-        userMapper.insert(user);
+    public void insertBatch() {
+        User user2 = new User();
+        user2.setId("777");
+        user2.setName("echils");
+        user2.setAge(24);
+        user2.setSex("女");
+        user2.setLogical(true);
+        userMapper.insertBatch(Arrays.asList(user2, user));
     }
 
 }

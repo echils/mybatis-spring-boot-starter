@@ -3,6 +3,7 @@ package com.github.mybatis.statement.metadata;
 import com.github.mybatis.specification.DynamicMapper;
 import com.github.mybatis.specification.SpecificationMapper;
 import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.ResultMapping;
@@ -15,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.github.mybatis.MybatisExpandContext.KEYWORDS_ESCAPE_FUNCTION;
 import static com.github.mybatis.MybatisExpandContext.EXPAND_DEFAULT_RESULT_MAP;
 
 /**
@@ -79,6 +81,23 @@ public class MappedMetaData {
      */
     public String getMappedStatementId() {
         return mapperInterface.getName() + "." + mappedMethod.getName();
+    }
+
+
+    /**
+     * 获取默认查询列
+     */
+    public String getBaseColumnList() {
+        List<ColumnMetaData> columnMetaDataList = tableMetaData.getColumnMetaDataList();
+        StringBuilder baseColumnListBuilder = new StringBuilder();
+        if (CollectionUtils.isNotEmpty(columnMetaDataList)) {
+            for (ColumnMetaData columnMetaData : columnMetaDataList) {
+                baseColumnListBuilder.append(KEYWORDS_ESCAPE_FUNCTION
+                        .apply(columnMetaData.getColumnName())).append(",");
+            }
+            baseColumnListBuilder.deleteCharAt(baseColumnListBuilder.lastIndexOf(","));
+        }
+        return baseColumnListBuilder.toString();
     }
 
 

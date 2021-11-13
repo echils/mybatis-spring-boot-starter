@@ -2,39 +2,32 @@ package com.github.mybatis.statement.loader;
 
 import com.github.mybatis.specification.SpecificationMapper;
 import com.github.mybatis.statement.metadata.MappedMetaData;
-import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.builder.StaticSqlSource;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
-import org.apache.ibatis.session.Configuration;
 
 /**
- * 通过主键查询功能加载器
+ * 通过主键批量查询功能加载器
  *
  * @author echils
  */
 @Slf4j
-public class SelectByPrimaryKeyStatementLoader extends AbstractExpandStatementLoader {
+public class SelectByPrimaryKeysStatementLoader extends AbstractExpandStatementLoader {
 
     /**
      * 拓展方法名
      */
     private static final String EXPAND_STATEMENT_METHOD
-            = SpecificationMapper.class.getName() + ".selectByPrimaryKey";
+            = SpecificationMapper.class.getName() + ".selectByPrimaryKeys";
 
     @Override
     SqlCommandType sqlCommandType() {
-        return SqlCommandType.SELECT;
+        return null;
     }
 
     @Override
     SqlSource sqlSourceBuild(MappedMetaData mappedMetaData) {
-        Configuration configuration =
-                mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
-        TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
-
-        return new StaticSqlSource(configuration, null);
+        return null;
     }
 
     @Override

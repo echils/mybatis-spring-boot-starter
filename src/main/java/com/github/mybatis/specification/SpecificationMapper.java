@@ -23,6 +23,14 @@ public interface SpecificationMapper<ID, T> extends DynamicMapper<T> {
 
 
     /**
+     * 通过主键批量查询
+     *
+     * @param keys 主键集合
+     */
+    List<T> selectByPrimaryKeys(Collection<ID> keys);
+
+
+    /**
      * 通过主键判断数据是否存在
      *
      * @param key 主键

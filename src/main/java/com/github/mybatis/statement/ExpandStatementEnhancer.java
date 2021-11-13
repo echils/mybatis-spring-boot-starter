@@ -5,10 +5,12 @@ import com.github.mybatis.annotations.Where;
 import com.github.mybatis.specification.DynamicMapper;
 import com.github.mybatis.specification.SpecificationMapper;
 import com.github.mybatis.statement.loader.*;
+import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import com.github.mybatis.statement.resolver.TableMetaDataResolver;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -79,8 +81,16 @@ public class ExpandStatementEnhancer {
         Class<?> entityClazz = entityOptional.get();
         TableMetaData tableMetaData =
                 tableMetaDataResolver.resolve(mapperFactoryBean.getSqlSession(), entityClazz);
+        Optional<ColumnMetaData> primaryKeyColumnOptional = tableMetaData.getColumnMetaDataList()
+                .stream().filter(ColumnMetaData::isPrimaryKey).findFirst();
         Where whereAnnotation = entityClazz.getAnnotation(Where.class);
         String globalWhereClause = whereAnnotation == null ? null : whereAnnotation.clause();
+
+        if (isNecessaryOfPrimaryKey(mapperInterface) && !primaryKeyColumnOptional.isPresent()) {
+            throw new MybatisExpandException("The entity class [" + entityClazz + "] has no primary key in the " +
+                    "corresponding table,please add primary key for it or use " +
+                    "the expandMapper [" + DynamicMapper.class.getName() + "]");
+        }
 
         Arrays.stream(mapperInterface.getMethods())
                 .filter(method -> !method.isDefault() && !method.isBridge()).forEach(method -> {
@@ -127,6 +137,23 @@ public class ExpandStatementEnhancer {
             }
         }
         return Optional.empty();
+    }
+
+
+    /**
+     * 判断该映射器是否需要主键
+     *
+     * @param clazz 需要拓展的业务映射器
+     */
+    private boolean isNecessaryOfPrimaryKey(Class<?> clazz) {
+        Class<?>[] interfaces = clazz.getInterfaces();
+        if (ArrayUtils.isNotEmpty(interfaces)) {
+            for (Class<?> interfaceBody : interfaces) {
+                return interfaceBody.getName().equals(SpecificationMapper.class.getName())
+                        || isNecessaryOfPrimaryKey(interfaceBody);
+            }
+        }
+        return false;
     }
 
 }

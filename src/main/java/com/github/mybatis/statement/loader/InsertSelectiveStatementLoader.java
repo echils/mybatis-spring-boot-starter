@@ -53,16 +53,16 @@ public class InsertSelectiveStatementLoader extends AbstractExpandStatementLoade
                 paramSqlNodes.add(StringUtils.isNotBlank(defaultValue) ? new ChooseSqlNode(Collections.singletonList(
                         new IfSqlNode(paramSqlNode, String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName()))),
                         new StaticTextSqlNode(columnMetaData.getDefaultValue() + ",")) : paramSqlNode);
-                columnSqlNodes.add(new StaticTextSqlNode(COLUMN_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
+                columnSqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
             } else {
-                columnSqlNodes.add(new IfSqlNode(new StaticTextSqlNode(COLUMN_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","),
+                columnSqlNodes.add(new IfSqlNode(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","),
                         String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName())));
                 paramSqlNodes.add(new IfSqlNode(paramSqlNode, String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName())));
             }
         }
 
         sqlNodes.add(new StaticTextSqlNode("INSERT INTO " +
-                COLUMN_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
+                KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
         sqlNodes.add(new TrimSqlNode(configuration,

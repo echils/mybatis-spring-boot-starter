@@ -53,11 +53,11 @@ public class InsertStatementLoader extends AbstractExpandStatementLoader {
                     new ChooseSqlNode(Collections.singletonList(new IfSqlNode(paramSqlNode,
                             String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName()))),
                             new StaticTextSqlNode(columnMetaData.getDefaultValue() + ",")) : paramSqlNode);
-            columnSqlNodes.add(new StaticTextSqlNode(COLUMN_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
+            columnSqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
         }
 
         sqlNodes.add(new StaticTextSqlNode("INSERT INTO " +
-                COLUMN_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
+                KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
         sqlNodes.add(new TrimSqlNode(configuration,
                 new MixedSqlNode(columnSqlNodes), " (", null,
                 ") ", ","));

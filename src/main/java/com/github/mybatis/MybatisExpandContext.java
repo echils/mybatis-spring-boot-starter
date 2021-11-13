@@ -71,7 +71,7 @@ public class MybatisExpandContext {
     /**
      * MYSQL关键字转义函数
      */
-    public static final Function<String, String> COLUMN_ESCAPE_FUNCTION = column -> {
+    public static final Function<String, String> KEYWORDS_ESCAPE_FUNCTION = column -> {
         if (StringUtils.isNotBlank(column)) {
             if (column.charAt(0) != COLUMN_ESCAPE_PARAM) {
                 column = COLUMN_ESCAPE_PARAM + column;

@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
-
 /**
  * UserMapperTest
  *
@@ -44,15 +42,20 @@ public class UserMapperTest {
 //        userMapper.insertSelective(user);
 //    }
 
+//    @Test
+//    public void insertBatch() {
+//        User user2 = new User();
+//        user2.setId("777");
+//        user2.setName("echils");
+//        user2.setAge(24);
+//        user2.setSex("女");
+//        user2.setLogical(true);
+//        userMapper.insertBatch(Arrays.asList(user2, user));
+//    }
+
     @Test
-    public void insertBatch() {
-        User user2 = new User();
-        user2.setId("777");
-        user2.setName("echils");
-        user2.setAge(24);
-        user2.setSex("女");
-        user2.setLogical(true);
-        userMapper.insertBatch(Arrays.asList(user2, user));
+    public void selectByPrimaryKey() {
+        System.out.println(userMapper.selectByPrimaryKey("666"));
     }
 
 }

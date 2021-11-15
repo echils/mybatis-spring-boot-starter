@@ -1,16 +1,15 @@
 package com.github.mybatis.statement.loader;
 
 import com.github.mybatis.specification.SpecificationMapper;
+import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.builder.StaticSqlSource;
+import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
-import org.apache.ibatis.scripting.xmltags.DynamicSqlSource;
-import org.apache.ibatis.scripting.xmltags.MixedSqlNode;
-import org.apache.ibatis.scripting.xmltags.SqlNode;
-import org.apache.ibatis.scripting.xmltags.StaticTextSqlNode;
 import org.apache.ibatis.session.Configuration;
 
 import java.util.LinkedList;
@@ -42,18 +41,24 @@ public class SelectByPrimaryKeyStatementLoader extends AbstractExpandStatementLo
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
         TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
-        List<SqlNode> sqlNodes = new LinkedList<>();
-        sqlNodes.add(new StaticTextSqlNode("SELECT "));
-        sqlNodes.add(new StaticTextSqlNode(mappedMetaData.getBaseColumnList()));
-        sqlNodes.add(new StaticTextSqlNode(" FROM "
-                + KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
-        sqlNodes.add(new StaticTextSqlNode(" WHERE 1=1 "));
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append("SELECT ");
+        sqlBuilder.append(mappedMetaData.getBaseColumnList());
+        sqlBuilder.append(" FROM ");
+        sqlBuilder.append(KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName()));
+        sqlBuilder.append(" WHERE 1=1");
         if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
-            sqlNodes.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
+            sqlBuilder.append(" AND ").append(mappedMetaData.getWhereClause());
         }
-
-
-        return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
+        List<ParameterMapping> parameterMappings = new LinkedList<>();
+        tableMetaData.getColumnMetaDataList().stream()
+                .filter(ColumnMetaData::isPrimaryKey).forEach(columnMetaData -> {
+            sqlBuilder.append(" AND ").append(KEYWORDS_ESCAPE_FUNCTION
+                    .apply(columnMetaData.getColumnName())).append(" = ?");
+            parameterMappings.add(new ParameterMapping.Builder(configuration, columnMetaData.getFieldName(),
+                    columnMetaData.getJavaType()).jdbcType(columnMetaData.getJdbcType()).build());
+        });
+        return new StaticSqlSource(configuration, sqlBuilder.toString(), parameterMappings);
     }
 
     @Override

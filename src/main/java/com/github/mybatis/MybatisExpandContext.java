@@ -43,6 +43,11 @@ public class MybatisExpandContext {
     public static final Integer ENTITY_RAW_INDEX = 1;
 
     /**
+     * 唯一主键索引
+     */
+    public static final Integer UNIQUE_PRIMARY_KEY_INDEX = 1;
+
+    /**
      * 未定义标签
      */
     public static final String UNDEFINED_LABEL = "UNDEFINED";

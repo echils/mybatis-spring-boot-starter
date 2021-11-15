@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Arrays;
+
 /**
  * UserMapperTest
  *
@@ -53,9 +55,14 @@ public class UserMapperTest {
 //        userMapper.insertBatch(Arrays.asList(user2, user));
 //    }
 
+//    @Test
+//    public void selectByPrimaryKey() {
+//        System.out.println(userMapper.selectByPrimaryKey("666"));
+//    }
+
     @Test
-    public void selectByPrimaryKey() {
-        System.out.println(userMapper.selectByPrimaryKey("666"));
+    public void selectByPrimaryKeys() {
+        System.out.println(userMapper.selectByPrimaryKeys(Arrays.asList("666", "777")));
     }
 
 }

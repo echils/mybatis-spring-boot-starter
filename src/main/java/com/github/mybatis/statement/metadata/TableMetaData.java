@@ -11,7 +11,7 @@ import java.util.List;
  * @author echils
  */
 @Data
-public class TableMetaData {
+public class TableMetaData implements Cloneable{
 
     /**
      * 表名称
@@ -30,5 +30,16 @@ public class TableMetaData {
      */
     private List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
 
+
+    @Override
+    protected TableMetaData clone() throws CloneNotSupportedException {
+        TableMetaData cloneData = (TableMetaData) super.clone();
+        List<ColumnMetaData> cloneColumnMetaDataList = new ArrayList<>();
+        for (ColumnMetaData columnMetaData : columnMetaDataList) {
+            cloneColumnMetaDataList.add(columnMetaData.clone());
+        }
+        cloneData.setColumnMetaDataList(cloneColumnMetaDataList);
+        return cloneData;
+    }
 
 }

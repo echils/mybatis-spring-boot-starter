@@ -9,7 +9,7 @@ import org.apache.ibatis.type.JdbcType;
  * @author echils
  */
 @Data
-public class ColumnMetaData {
+public class ColumnMetaData implements Cloneable {
 
     /**
      * 数据库字段名称
@@ -41,4 +41,9 @@ public class ColumnMetaData {
      */
     private String defaultValue;
 
+
+    @Override
+    protected ColumnMetaData clone() throws CloneNotSupportedException {
+        return (ColumnMetaData) super.clone();
+    }
 }

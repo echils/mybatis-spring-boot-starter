@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
-
 /**
  * UserMapperTest
  *
@@ -60,9 +58,36 @@ public class UserMapperTest {
 //        System.out.println(userMapper.selectByPrimaryKey("666"));
 //    }
 
+//    @Test
+//    public void selectByPrimaryKeys() {
+//        System.out.println(userMapper.selectByPrimaryKeys(Arrays.asList("666", "777")));
+//    }
+
+
+//    @Test
+//    public void deleteByPrimaryKey() {
+//        System.out.println(userMapper.deleteByPrimaryKey("777"));
+//    }
+
+//    @Test
+//    public void deleteByPrimaryKeys() {
+//        System.out.println(userMapper.deleteByPrimaryKeys(Arrays.asList("666", "777")));
+//    }
+
+//    @Test
+//    public void existByPrimaryKey() {
+//        System.out.println(userMapper.existByPrimaryKey("666"));
+//    }
+
     @Test
-    public void selectByPrimaryKeys() {
-        System.out.println(userMapper.selectByPrimaryKeys(Arrays.asList("666", "777")));
+    public void update() {
+        User user2 = new User();
+        user2.setId("666");
+        user2.setName("echils");
+        user2.setAge(24);
+        user2.setSex("女");
+        user2.setLogical(true);
+        userMapper.update(user2);
     }
 
 }

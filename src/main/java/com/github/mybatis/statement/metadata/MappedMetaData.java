@@ -9,6 +9,7 @@ import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.ResultMapping;
 import org.apache.ibatis.session.Configuration;
 import org.mybatis.spring.mapper.MapperFactoryBean;
+import org.springframework.beans.BeanUtils;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -75,6 +76,30 @@ public class MappedMetaData {
         this.mapperFactoryBean = mapperFactoryBean;
     }
 
+    public TableMetaData getTableMetaData() {
+        TableMetaData cloneMetaData;
+        try {
+            cloneMetaData= tableMetaData.clone();
+        } catch (CloneNotSupportedException e) {
+            TableMetaData newMeta = new TableMetaData();
+            newMeta.setName(tableMetaData.getName());
+            newMeta.setEntityName(tableMetaData.getEntityName());
+            List<ColumnMetaData> cloneColumnMetaDataList = new ArrayList<>();
+            for (ColumnMetaData columnMetaData : tableMetaData.getColumnMetaDataList()) {
+                try {
+                    ColumnMetaData clone = columnMetaData.clone();
+                    cloneColumnMetaDataList.add(clone);
+                } catch (CloneNotSupportedException e1) {
+                    ColumnMetaData newColumn = new ColumnMetaData();
+                    BeanUtils.copyProperties(columnMetaData, newColumn);
+                    cloneColumnMetaDataList.add(newColumn);
+                }
+            }
+            newMeta.setColumnMetaDataList(cloneColumnMetaDataList);
+            cloneMetaData = newMeta;
+        }
+        return cloneMetaData;
+    }
 
     /**
      * 获取Mybatis的StatementId

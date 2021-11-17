@@ -57,6 +57,6 @@ public class User {
      * 逻辑列
      */
     @Column(defaultValue = "true")
-    private boolean logical;
+    private Boolean logical;
 
 }

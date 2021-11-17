@@ -57,9 +57,9 @@ public class ExpandStatementEnhancer {
         expandStatementLoaders.add(new InsertStatementLoader());
         expandStatementLoaders.add(new DeleteByPrimaryKeysStatementLoader());
         expandStatementLoaders.add(new DeleteByPrimaryKeyStatementLoader());
-//        expandStatementLoaders.add(new UpdateBatchStatementLoader());
-//        expandStatementLoaders.add(new UpdateSelectiveBatchStatementLoader());
-//        expandStatementLoaders.add(new UpdateSelectiveStatementLoader());
+        expandStatementLoaders.add(new UpdateBatchStatementLoader());
+        expandStatementLoaders.add(new UpdateSelectiveBatchStatementLoader());
+        expandStatementLoaders.add(new UpdateSelectiveStatementLoader());
         expandStatementLoaders.add(new UpdateStatementLoader());
         expandStatementLoaders.add(new SelectByPrimaryKeysStatementLoader());
         expandStatementLoaders.add(new SelectByPrimaryKeyStatementLoader());

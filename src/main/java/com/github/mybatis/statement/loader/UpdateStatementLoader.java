@@ -61,9 +61,9 @@ public class UpdateStatementLoader extends AbstractExpandStatementLoader {
         List<SqlNode> keySqlNodeList = new LinkedList<>();
         keySqlNodeList.add(new StaticTextSqlNode(" 1 = 1"));
         keySqlNodeList.addAll(primaryKeyColumnList.stream().map(columnMetaData ->
-                new StaticTextSqlNode(" AND " + columnMetaData.getFieldName() + "=" + String.format(MYBATIS_PARAM_EXPRESSION,
+                new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + String.format(MYBATIS_PARAM_EXPRESSION,
                         columnMetaData.getFieldName(), columnMetaData.getJdbcType()))).collect(Collectors.toList()));
-        setSqlNodeList.add(new WhereSqlNode(configuration, new MixedSqlNode(keySqlNodeList)));
+        sqlNodeList.add(new WhereSqlNode(configuration, new MixedSqlNode(keySqlNodeList)));
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodeList));
     }
 
@@ -71,4 +71,5 @@ public class UpdateStatementLoader extends AbstractExpandStatementLoader {
     public boolean match(MappedMetaData mappedMetaData) {
         return mappedMetaData.getMappedMethod().toString().contains(EXPAND_STATEMENT_METHOD);
     }
+
 }

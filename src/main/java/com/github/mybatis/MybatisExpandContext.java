@@ -18,16 +18,6 @@ public class MybatisExpandContext {
     public static final char COLUMN_ESCAPE_PARAM = '`';
 
     /**
-     * MYSQL模糊查询关键字
-     */
-    public static final char COLUMN_LIKE_PARAM = '%';
-
-    /**
-     * MYSQL多参数连接符
-     */
-    public static final String CONDITION_BETWEEN_VALUE_CONNECTOR = "&";
-
-    /**
      * 数据库类型-MySQL
      */
     public static final String MySQL = "MySQL";

@@ -1,21 +1,18 @@
 package com.github.mybatis.specification.condition;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Collection;
 
-import static com.github.mybatis.MybatisExpandContext.CONDITION_BETWEEN_VALUE_CONNECTOR;
 
 /**
  * 动态查询参数
  *
  * @author echils
  */
-@Data
+@Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class Condition {
 
     /**
@@ -55,11 +52,7 @@ public class Condition {
         IS_NOT_NULL("IS NOT NULL"),
         IS_BLANK("= ''"),
         IS_NOT_BLANK("!= ''"),
-        //使用between时，value会是一个区间，可以用规定连接符{MybatisExpandContext.CONDITION_BETWEEN_VALUE_CONNECTOR}
-        //连接两个值，例如 5&10。如果没有使用，那么默认前后区间为相同值.
         BETWEEN("BETWEEN"),
-        //使用between时，value会是一个区间，可以用规定连接符{MybatisExpandContext.CONDITION_BETWEEN_VALUE_CONNECTOR}
-        //连接两个值，例如 5&10。如果没有使用，那么默认前后区间为相同值.
         NOT_BETWEEN("NOT BETWEEN");
 
         public final String expression;
@@ -67,6 +60,12 @@ public class Condition {
         Rule(String expression) {
             this.expression = expression;
         }
+    }
+
+
+    public Condition(String param, Rule rule) {
+        this.param = param;
+        this.rule = rule;
     }
 
 
@@ -110,25 +109,25 @@ public class Condition {
     public void like(String param, String value) {
         this.param = param;
         this.rule = Rule.LIKE;
-        this.value = value;
+        this.value = "%" + value + "%";
     }
 
     public void noLike(String param, String value) {
         this.param = param;
         this.rule = Rule.NOT_LIKE;
-        this.value = value;
+        this.value = "%" + value + "%";
     }
 
     public void leftLike(String param, String value) {
         this.param = param;
         this.rule = Rule.LEFT_LIKE;
-        this.value = value;
+        this.value = "%" + value;
     }
 
     public void rightLike(String param, String value) {
         this.param = param;
         this.rule = Rule.RIGHT_LIKE;
-        this.value = value;
+        this.value = value + "%";
     }
 
     public void in(String param, Collection collection) {
@@ -178,13 +177,13 @@ public class Condition {
     public void between(String param, Object min, Object max) {
         this.param = param;
         this.rule = Rule.BETWEEN;
-        this.value = min + CONDITION_BETWEEN_VALUE_CONNECTOR + max;
+        this.value = min + " AND " + max;
     }
 
     public void notBetween(String param, Object min, Object max) {
         this.param = param;
         this.rule = Rule.NOT_BETWEEN;
-        this.value = min + CONDITION_BETWEEN_VALUE_CONNECTOR + max;
+        this.value = min + " AND " + max;
     }
     
 }

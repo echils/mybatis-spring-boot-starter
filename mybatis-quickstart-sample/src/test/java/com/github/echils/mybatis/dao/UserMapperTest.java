@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Arrays;
+import java.util.Date;
+
 /**
  * UserMapperTest
  *
@@ -79,15 +82,49 @@ public class UserMapperTest {
 //        System.out.println(userMapper.existByPrimaryKey("666"));
 //    }
 
+//    @Test
+//    public void update() {
+//        User user2 = new User();
+//        user2.setId("666");
+//        user2.setName("echils");
+//        user2.setAge(24);
+//        user2.setSex("女");
+//        user2.setCreateTime(new Date());
+//        user2.setLogical(true);
+//        userMapper.update(user2);
+//    }
+
+//    @Test
+//    public void updateSelective() {
+//        User user2 = new User();
+//        user2.setId("666");
+//        user2.setAge(18);
+//        user2.setSex("女");
+//        userMapper.updateSelective(user2);
+//    }
+
+//    @Test
+//    public void updateSelectiveBatch() {
+//        User user2 = new User();
+//        user2.setAge(18);
+//        user2.setCreateTime(new Date());
+//        userMapper.updateSelectiveBatch(Arrays.asList("666", "777"), user2);
+//    }
+
     @Test
-    public void update() {
+    public void updateBatch() {
         User user2 = new User();
-        user2.setId("666");
+        user2.setId("777");
         user2.setName("echils");
         user2.setAge(24);
         user2.setSex("女");
+        user2.setCreateTime(new Date());
         user2.setLogical(true);
-        userMapper.update(user2);
+
+        user.setAge(20);
+        user.setCreateTime(new Date());
+        user.setLogical(false);
+        userMapper.updateBatch(Arrays.asList(user2, user));
     }
 
 }

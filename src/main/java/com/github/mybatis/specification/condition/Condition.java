@@ -2,6 +2,7 @@ package com.github.mybatis.specification.condition;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.Collection;
 
@@ -12,6 +13,7 @@ import java.util.Collection;
  * @author echils
  */
 @Getter
+@ToString
 @NoArgsConstructor
 public class Condition {
 
@@ -55,10 +57,10 @@ public class Condition {
         BETWEEN("BETWEEN"),
         NOT_BETWEEN("NOT BETWEEN");
 
-        public final String expression;
+        public final String value;
 
-        Rule(String expression) {
-            this.expression = expression;
+        Rule(String value) {
+            this.value = value;
         }
     }
 
@@ -69,68 +71,68 @@ public class Condition {
     }
 
 
-    public void eq(String param, String value) {
+    public void eq(String param, Object value) {
         this.param = param;
         this.rule = Rule.EQ;
         this.value = value;
     }
 
 
-    public void notEq(String param, String value) {
+    public void notEq(String param, Object value) {
         this.param = param;
         this.rule = Rule.NOT_EQ;
         this.value = value;
     }
 
-    public void lt(String param, String value) {
+    public void lt(String param, Object value) {
         this.param = param;
         this.rule = Rule.LT;
         this.value = value;
     }
 
-    public void gt(String param, String value) {
+    public void gt(String param, Object value) {
         this.param = param;
         this.rule = Rule.GT;
         this.value = value;
     }
 
-    public void le(String param, String value) {
+    public void le(String param, Object value) {
         this.param = param;
         this.rule = Rule.LE;
         this.value = value;
     }
 
-    public void ge(String param, String value) {
+    public void ge(String param, Object value) {
         this.param = param;
         this.rule = Rule.GE;
         this.value = value;
     }
 
-    public void like(String param, String value) {
+    public void like(String param, Object value) {
         this.param = param;
         this.rule = Rule.LIKE;
         this.value = "%" + value + "%";
     }
 
-    public void noLike(String param, String value) {
+    public void noLike(String param, Object value) {
         this.param = param;
         this.rule = Rule.NOT_LIKE;
         this.value = "%" + value + "%";
     }
 
-    public void leftLike(String param, String value) {
+    public void leftLike(String param, Object value) {
         this.param = param;
         this.rule = Rule.LEFT_LIKE;
         this.value = "%" + value;
     }
 
-    public void rightLike(String param, String value) {
+    public void rightLike(String param, Object value) {
         this.param = param;
         this.rule = Rule.RIGHT_LIKE;
         this.value = value + "%";
     }
 
-    public void in(String param, Collection collection) {
+    public void in(String param, Collection<?> collection) {
         this.param = param;
         this.rule = Rule.IN;
         this.value = collection;
@@ -142,7 +144,7 @@ public class Condition {
         this.value = values;
     }
 
-    public void notIn(String param, Collection collection) {
+    public void notIn(String param, Collection<?> collection) {
         this.param = param;
         this.rule = Rule.NOT_IN;
         this.value = collection;

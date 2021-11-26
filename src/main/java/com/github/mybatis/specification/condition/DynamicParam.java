@@ -2,10 +2,9 @@ package com.github.mybatis.specification.condition;
 
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 
@@ -19,9 +18,9 @@ import java.util.function.Consumer;
 public class DynamicParam {
 
     /**
-     * Where条件，多个条件之间将用AND连接
+     * Where条件,多条件默认用{@link Joint#AND}连接，可自定义指定
      */
-    private List<Condition> whereConditions = new ArrayList<>();
+    private LinkedHashMap<Condition, Joint> whereConditions = new LinkedHashMap<>();
 
     /**
      * Group条件
@@ -29,9 +28,9 @@ public class DynamicParam {
     private List<String> groupConditions = new ArrayList<>();
 
     /**
-     * Having条件，多个条件之间将用AND连接
+     * Having条件，多条件默认用{@link Joint#AND}连接，可自定义指定
      */
-    private List<Condition> havingConditions = new ArrayList<>();
+    private LinkedHashMap<Condition, Joint> havingConditions = new LinkedHashMap<>();
 
     /**
      * Order条件
@@ -47,18 +46,34 @@ public class DynamicParam {
      * 添加Where条件
      */
     public DynamicParam where(Condition condition) {
-        if (condition != null) { whereConditions.add(condition); }
+        return this.where(condition, Joint.AND);
+    }
+
+    /**
+     * 添加Where条件
+     */
+    public DynamicParam where(Condition condition, Joint joint) {
+        if (condition != null) {
+            whereConditions.put(condition, joint);
+        }
         return this;
     }
 
     /**
      * 添加Where条件
      */
-    public DynamicParam where(Consumer<Condition> condition){
+    public DynamicParam where(Consumer<Condition> condition) {
+        return this.where(condition, Joint.AND);
+    }
+
+    /**
+     * 添加Where条件
+     */
+    public DynamicParam where(Consumer<Condition> condition, Joint joint) {
         if (condition != null) {
             Condition body = new Condition();
             condition.accept(body);
-            where(body);
+            return this.where(body, joint);
         }
         return this;
     }
@@ -66,7 +81,7 @@ public class DynamicParam {
     /**
      * 添加Group条件
      */
-    public DynamicParam groupBy(String ... params){
+    public DynamicParam groupBy(String... params) {
         groupConditions.addAll(Arrays.asList(params));
         return this;
     }
@@ -75,7 +90,16 @@ public class DynamicParam {
      * 添加Having条件
      */
     public DynamicParam having(Condition condition) {
-        if (condition != null) { havingConditions.add(condition); }
+        return this.having(condition, Joint.AND);
+    }
+
+    /**
+     * 添加Having条件
+     */
+    public DynamicParam having(Condition condition, Joint joint) {
+        if (condition != null) {
+            havingConditions.put(condition, joint);
+        }
         return this;
     }
 
@@ -83,10 +107,17 @@ public class DynamicParam {
      * 添加Having条件
      */
     public DynamicParam having(Consumer<Condition> condition) {
+        return this.having(condition, Joint.AND);
+    }
+
+    /**
+     * 添加Having条件
+     */
+    public DynamicParam having(Consumer<Condition> condition, Joint joint) {
         if (condition != null) {
             Condition body = new Condition();
             condition.accept(body);
-            having(body);
+            return this.having(body, joint);
         }
         return this;
     }
@@ -95,7 +126,9 @@ public class DynamicParam {
      * 添加Order条件
      */
     public DynamicParam order(Order order) {
-        if (order != null) { orderConditions.add(order); }
+        if (order != null) {
+            orderConditions.add(order);
+        }
         return this;
     }
 
@@ -111,8 +144,7 @@ public class DynamicParam {
      * 添加Order条件
      */
     public DynamicParam order(String param, Order.Rule rule) {
-        order(new Order(param, rule));
-        return this;
+        return order(new Order(param, rule));
     }
 
     /**
@@ -131,10 +163,41 @@ public class DynamicParam {
      */
     public DynamicParam page(Integer pageIndex, Integer pageSize) {
         if (pageIndex != null && pageSize != null) {
-            if (pageIndex < 1) { pageIndex = 1; }
+            if (pageIndex < 1) {
+                pageIndex = 1;
+            }
             limit = new Limit((pageIndex - 1) * pageSize, pageSize);
         }
         return this;
+    }
+
+    /**
+     * 将最后一个Where连接条件置为空
+     */
+    public Map<Condition, Joint> getWhereConditions() {
+        if (MapUtils.isNotEmpty(whereConditions)) {
+            Condition[] conditions = whereConditions.keySet().toArray(new Condition[whereConditions.size()]);
+            whereConditions.replace(conditions[conditions.length - 1], null);
+        }
+        return whereConditions;
+    }
+
+    /**
+     * 将最后一个Having连接条件置为空
+     */
+    public LinkedHashMap<Condition, Joint> getHavingConditions() {
+        if (MapUtils.isNotEmpty(havingConditions)) {
+            Condition[] conditions = havingConditions.keySet().toArray(new Condition[havingConditions.size()]);
+            havingConditions.replace(conditions[conditions.length - 1], null);
+        }
+        return havingConditions;
+    }
+
+    /**
+     * 多条件连接关键字
+     */
+    public enum Joint {
+        AND, OR
     }
 
 }

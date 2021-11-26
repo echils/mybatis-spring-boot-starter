@@ -62,6 +62,10 @@ public class MybatisExpandContext {
      */
     public static final String MYBATIS_TEST_EXPRESSION = "%s != null";
 
+    /**
+     * MySQL 条件表达式
+     */
+    public static final String MYBATIS_WHERE_EXPRESSION = "WHERE";
 
     /**
      * MYSQL关键字转义函数

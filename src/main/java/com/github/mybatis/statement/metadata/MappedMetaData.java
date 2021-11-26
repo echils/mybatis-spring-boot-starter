@@ -4,6 +4,7 @@ import com.github.mybatis.specification.DynamicMapper;
 import com.github.mybatis.specification.SpecificationMapper;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.ResultMapping;
@@ -17,8 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.github.mybatis.MybatisExpandContext.KEYWORDS_ESCAPE_FUNCTION;
-import static com.github.mybatis.MybatisExpandContext.EXPAND_DEFAULT_RESULT_MAP;
+import static com.github.mybatis.MybatisExpandContext.*;
 
 /**
  * 拓展功能映射元数据
@@ -99,6 +99,19 @@ public class MappedMetaData {
             cloneMetaData = newMeta;
         }
         return cloneMetaData;
+    }
+
+    /**
+     * 获取全局查询条件
+     */
+    public String getWhereClause() {
+        if (StringUtils.isNotBlank(whereClause)) {
+            String firstClause = whereClause.split(" ")[0];
+            if (MYBATIS_WHERE_EXPRESSION.equalsIgnoreCase(firstClause)) {
+                whereClause = whereClause.replaceFirst(firstClause, "");
+            }
+        }
+        return whereClause;
     }
 
     /**

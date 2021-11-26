@@ -50,7 +50,7 @@ public class ExpandStatementEnhancer {
     //加载内置拓展功能加载器
     private void initStatementLoader() {
 //        expandStatementLoaders.add(new DynamicCountStatementLoader());
-//        expandStatementLoaders.add(new DynamicFindAllStatementLoader());
+        expandStatementLoaders.add(new DynamicFindAllStatementLoader());
         expandStatementLoaders.add(new ExistByPrimaryKeyStatementLoader());
         expandStatementLoaders.add(new InsertBatchStatementLoader());
         expandStatementLoaders.add(new InsertSelectiveStatementLoader());
@@ -85,7 +85,7 @@ public class ExpandStatementEnhancer {
         Optional<ColumnMetaData> primaryKeyColumnOptional = tableMetaData.getColumnMetaDataList()
                 .stream().filter(ColumnMetaData::isPrimaryKey).findFirst();
         Where whereAnnotation = entityClazz.getAnnotation(Where.class);
-        String globalWhereClause = whereAnnotation == null ? null : whereAnnotation.clause();
+        String globalWhereClause = whereAnnotation == null ? null : whereAnnotation.clause().trim();
 
         if (isNecessaryOfPrimaryKey(mapperInterface) && !primaryKeyColumnOptional.isPresent()) {
             throw new MybatisExpandException("The entity class [" + entityClazz + "] has no primary key in the " +

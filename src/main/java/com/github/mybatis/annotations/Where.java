@@ -16,6 +16,6 @@ public @interface Where {
     /**
      * 查询条件
      */
-    String clause();
+    String clause() default "";
 
 }

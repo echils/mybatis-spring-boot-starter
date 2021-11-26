@@ -127,22 +127,37 @@ public class UserMapperTest {
 //        userMapper.updateBatch(Arrays.asList(user2, user));
 //    }
 
-    @Test
-    public void testFindAll() {
-        //查询全部
-        System.out.println(userMapper.findAll());
+//    @Test
+//    public void testFindAll() {
+//
+//        //查询全部
+//        System.out.println(userMapper.findAll());
+//
+//        //动态查询
+//        DynamicParam dynamicParam = new DynamicParam();
+//        dynamicParam.where(condition -> condition.between("age", 21, 24));
+//        dynamicParam.where(condition -> condition.rightLike("name", "ec"), DynamicParam.Joint.OR);
+//        dynamicParam.where(condition -> condition.gt("create_time", "2021-01-01"));
+//        dynamicParam.groupBy("id", "name");
+//        dynamicParam.having(condition -> condition.eq("logical", "1"));
+//        dynamicParam.order("id", Order.Rule.ASC);
+//        dynamicParam.order(new Order("create_time", Order.Rule.ASC));
+//        dynamicParam.page(0, 1);
+//        System.out.println(userMapper.findAll(dynamicParam));
+//    }
 
-        //动态查询
+    @Test
+    public void testCount() {
+
+        //查询总数
+        System.out.println(userMapper.total());
+
+        //动态统计
         DynamicParam dynamicParam = new DynamicParam();
         dynamicParam.where(condition -> condition.between("age", 21, 24));
-        dynamicParam.where(condition -> condition.rightLike("name", "ec"), DynamicParam.Joint.OR);
+        dynamicParam.where(condition -> condition.rightLike("name", "ec"));
         dynamicParam.where(condition -> condition.gt("create_time", "2021-01-01"));
-        dynamicParam.groupBy("id", "name");
-        dynamicParam.having(condition -> condition.eq("logical", "1"));
-        dynamicParam.order("id", Order.Rule.ASC);
-        dynamicParam.order(new Order("create_time", Order.Rule.ASC));
-        dynamicParam.page(0, 1);
-        System.out.println(userMapper.findAll(dynamicParam));
+        System.out.println(userMapper.count(dynamicParam));
     }
 
 }

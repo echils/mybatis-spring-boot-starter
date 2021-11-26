@@ -49,7 +49,7 @@ public class ExpandStatementEnhancer {
 
     //加载内置拓展功能加载器
     private void initStatementLoader() {
-//        expandStatementLoaders.add(new DynamicCountStatementLoader());
+        expandStatementLoaders.add(new DynamicCountStatementLoader());
         expandStatementLoaders.add(new DynamicFindAllStatementLoader());
         expandStatementLoaders.add(new ExistByPrimaryKeyStatementLoader());
         expandStatementLoaders.add(new InsertBatchStatementLoader());

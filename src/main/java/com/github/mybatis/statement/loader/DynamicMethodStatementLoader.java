@@ -11,6 +11,8 @@ import org.apache.ibatis.scripting.xmltags.SqlNode;
 import org.apache.ibatis.scripting.xmltags.StaticTextSqlNode;
 import org.apache.ibatis.session.Configuration;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,6 +23,19 @@ import java.util.List;
  */
 @Slf4j
 public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader {
+
+    /**
+     * 支持的表达式前缀
+     */
+    private static final List<String> EXPRESSION_PREFIX_LIST = new ArrayList<>();
+
+    private static final String FIND_EXPRESSION_PREFIX = "findBy";
+    private static final String SELECT_EXPRESSION_PREFIX = "selectBy";
+
+    public DynamicMethodStatementLoader() {
+        EXPRESSION_PREFIX_LIST.add(FIND_EXPRESSION_PREFIX);
+        EXPRESSION_PREFIX_LIST.add(SELECT_EXPRESSION_PREFIX);
+    }
 
     @Override
     SqlCommandType sqlCommandType() {
@@ -39,7 +54,22 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
 
     @Override
     public boolean match(MappedMetaData mappedMetaData) {
-        return true;
+        return methodValidate(mappedMetaData.getMappedMethod());
     }
+
+
+    /**
+     * 判断方法是否
+     *
+     * @param method 动态方法
+     */
+    private boolean methodValidate(Method method) {
+
+
+        return false;
+    }
+
+
+
 
 }

@@ -96,9 +96,9 @@ public class DynamicFindAllStatementLoader extends AbstractExpandStatementLoader
                                 new IfSqlNode(new ForEachSqlNode(configuration, new StaticTextSqlNode(" #{data} "),
                                         "key.value", null, "data",
                                         "(", ")", ","), "key.rule.name =='IN' || key.rule.name =='NOT_IN'"),
-                                new IfSqlNode(new StaticTextSqlNode(""), " key.rule.name()=='IS_BLANK' " +
-                                        "||key.rule.name()=='IS_NOT_BLANK' || key.rule.name()=='IS_NULL' " +
-                                        "|| key.rule.name()=='IS_NOT_NULL'"),
+                                new IfSqlNode(new StaticTextSqlNode(""), " key.rule.name=='IS_BLANK' " +
+                                        "||key.rule.name=='IS_NOT_BLANK' || key.rule.name=='IS_NULL' " +
+                                        "|| key.rule.name=='IS_NOT_NULL'"),
                                 new IfSqlNode(new TextSqlNode("${key.value}"), "key.rule.name =='BETWEEN' || key.rule.name =='NOT_BETWEEN'")),
                                 new StaticTextSqlNode("#{key.value}")),
                         new ChooseSqlNode(Collections.singletonList(new IfSqlNode(new TextSqlNode("${value}"),

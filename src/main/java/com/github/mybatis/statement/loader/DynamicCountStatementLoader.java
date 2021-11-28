@@ -53,23 +53,19 @@ public class DynamicCountStatementLoader extends AbstractExpandStatementLoader {
 
         //DynamicParam#whereConditions属性
         sqlNodes.add(new IfSqlNode(new MixedSqlNode(Arrays.asList(new StaticTextSqlNode(" AND "),
-                new IfSqlNode(new MixedSqlNode(Collections.singletonList(
-                        new ForEachSqlNode(configuration, new MixedSqlNode(Arrays.asList(
-                                new TextSqlNode(" ${key.param} ${key.rule.value} "),
-                                new ChooseSqlNode(Arrays.asList(
-                                        new IfSqlNode(new ForEachSqlNode(configuration, new StaticTextSqlNode(" #{data} "),
-                                                "key.value", null, "data",
-                                                "(", ")", ","), "key.rule.name == 'IN' || key.rule.name == 'NOT_IN'"),
-                                        new IfSqlNode(new StaticTextSqlNode(""), " key.rule.name()=='IS_BLANK' " +
-                                                "||key.rule.name()=='IS_NOT_BLANK' || key.rule.name()=='IS_NULL' " +
-                                                "|| key.rule.name()=='IS_NOT_NULL'"),
-                                        new IfSqlNode(new TextSqlNode("${key.value}"), "key.rule.name =='BETWEEN' || key.rule.name =='NOT_BETWEEN'")),
-                                        new StaticTextSqlNode("#{key.value}")),
-                                new ChooseSqlNode(Collections.singletonList(new IfSqlNode(new TextSqlNode("${value}"),
-                                        "value != null")), new StaticTextSqlNode(""))
-                        )), "whereConditions", "key", "value", null,
-                                null, null))), "whereConditions" + " != null"))),
+                dynamicSqlNode(configuration, "whereConditions"))),
                 "whereConditions != null && whereConditions.size() > 0"));
+
+        //DynamicParam#groupConditions属性
+        sqlNodes.add(new IfSqlNode(new MixedSqlNode(Arrays.asList(new StaticTextSqlNode(" GROUP BY "),
+                new ForEachSqlNode(configuration, new TextSqlNode("${data}"),
+                        "groupConditions", null, "data", null, null, ","))),
+                "groupConditions != null && groupConditions.size() > 0"));
+
+        //DynamicParam#havingConditions属性
+        sqlNodes.add(new IfSqlNode(new MixedSqlNode(Arrays.asList(new StaticTextSqlNode(" HAVING "),
+                dynamicSqlNode(configuration, "havingConditions"))),
+                "havingConditions != null && havingConditions.size()>0 "));
 
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
@@ -79,5 +75,26 @@ public class DynamicCountStatementLoader extends AbstractExpandStatementLoader {
         return mappedMetaData.getMappedMethod().toString().contains(EXPAND_STATEMENT_METHOD);
     }
 
+
+    /**
+     * 动态SQL构建
+     */
+    private IfSqlNode dynamicSqlNode(Configuration configuration, String expression) {
+        return new IfSqlNode(new MixedSqlNode(Collections.singletonList(
+                new ForEachSqlNode(configuration, new MixedSqlNode(Arrays.asList(
+                        new TextSqlNode(" ${key.param} ${key.rule.value} "),
+                        new ChooseSqlNode(Arrays.asList(
+                                new IfSqlNode(new ForEachSqlNode(configuration, new StaticTextSqlNode(" #{data} "),
+                                        "key.value", null, "data",
+                                        "(", ")", ","), "key.rule.name == 'IN' || key.rule.name == 'NOT_IN'"),
+                                new IfSqlNode(new StaticTextSqlNode(""), " key.rule.name=='IS_BLANK' " +
+                                        "||key.rule.name=='IS_NOT_BLANK' || key.rule.name=='IS_NULL' " +
+                                        "|| key.rule.name=='IS_NOT_NULL'"),
+                                new IfSqlNode(new TextSqlNode("${key.value}"), "key.rule.name =='BETWEEN' || key.rule.name =='NOT_BETWEEN'")),
+                                new StaticTextSqlNode("#{key.value}")),
+                        new ChooseSqlNode(Collections.singletonList(new IfSqlNode(new TextSqlNode("${value}"),
+                                "value != null")), new StaticTextSqlNode(""))
+                )), expression, "key", "value", null, null, null))), expression + " != null");
+    }
 
 }

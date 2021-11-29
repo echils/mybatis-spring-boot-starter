@@ -1,8 +1,7 @@
 package com.github.echils.mybatis.dao;
 
 import com.github.echils.mybatis.model.User;
-import com.github.mybatis.specification.condition.DynamicParam;
-import com.github.mybatis.specification.condition.Order;
+import com.github.mybatis.specification.condition.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

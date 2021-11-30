@@ -139,30 +139,37 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
 
         AND("And"),
         OR("Or"),
-        EQUALS("Equals"),
-        NOT_EQUALS("NotEquals"),
-        BETWEEN("Between"),
-        NOT_BETWEEN("NotBetween"),
-        LESS_THAN("LessThan"),
-        LESS_THAN_EQUAL("LessThanEqual"),
-        GREATER_THAN("GreaterThan"),
-        GREATER_THAN_EQUAL("GreaterThanEqual"),
+        EQUALS("Equals", 1),
+        NOT_EQUALS("NotEquals", 1),
+        BETWEEN("Between", 2),
+        NOT_BETWEEN("NotBetween", 2),
+        LESS_THAN("LessThan", 1),
+        LESS_THAN_EQUAL("LessThanEqual", 1),
+        GREATER_THAN("GreaterThan", 1),
+        GREATER_THAN_EQUAL("GreaterThanEqual", 1),
         IS_NULL("IsNull"),
         IS_NOT_NULL("IsNotNull"),
         IS_BLANK("IsBlank"),
         IS_NOT_BLANK("IsNotBlank"),
-        LIKE("Like"),
-        NOT_LIKE("NotLike"),
-        STARTING_WITH("StartingWith"),
-        ENDING_WITH("EndingWith"),
-        IN("In"),
-        NOT_IN("NotIn"),
-        ORDER_BY("OrderBy");
+        LIKE("Like", 1),
+        NOT_LIKE("NotLike", 1),
+        STARTING_WITH("StartingWith", 1),
+        ENDING_WITH("EndingWith", 1),
+        IN("In", 1),
+        NOT_IN("NotIn", 1),
+        ORDER_BY("OrderBy", 1);
 
         public String value;
 
+        private int argNum;
+
         Part(String value) {
+            this(value, 0);
+        }
+
+        Part(String value, int argNum) {
             this.value = value;
+            this.argNum = argNum;
         }
 
         public Part nameOf(String value) {
@@ -172,6 +179,5 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         }
 
     }
-
 
 }

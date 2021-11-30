@@ -5,7 +5,6 @@ import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.DynamicSqlSource;
@@ -16,6 +15,7 @@ import org.apache.ibatis.session.Configuration;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.github.mybatis.MybatisExpandContext.underlineToHumpFunction;
@@ -39,6 +39,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
     private static final String FIND_EXPRESSION_PREFIX = "findBy";
     private static final String SELECT_EXPRESSION_PREFIX = "selectBy";
     private static final String FIELD_EXPRESSION_JOINT = ",";
+    private static final String KEYWORD_TEMPLATE = "(%s)(?=(\\p{Lu}|\\P{InBASIC_LATIN}))";
 
     public DynamicMethodStatementLoader() {
         EXPRESSION_PREFIX_TEMPLATE.add(FIND_EXPRESSION_PREFIX);
@@ -108,27 +109,15 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
      * 解析方法名
      */
     private Map<String, Part> parseSyntaxTree(String methodName, Set<String> fieldSet) {
-        Map<String, Part> map = new HashMap<>();
-        Iterator<String> iterator = fieldSet.iterator();
-        String key = null;
-        while (iterator.hasNext()) {
-            String field = iterator.next();
-            if (methodName.startsWith(field)) {
-                key = field;
-                break;
-            }
+        Pattern pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.ORDER_BY.value));
+        String[] orderBySplit = pattern.split(methodName);
+        if (orderBySplit.length > 2) {
+            throw new IllegalArgumentException("OrderBy must not be used more than once in a method name!");
         }
-        if (StringUtils.isNotBlank(key)) {
-            methodName = methodName.substring(methodName.indexOf(key));
+        if (orderBySplit.length == 2) {
+//            orderBySplit[1]
         }
-        for (String part : PART_SET) {
-            if (methodName.startsWith(part)) {
-
-            }
-        }
-
-
-        return map;
+        return null;
     }
 
 

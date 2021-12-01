@@ -50,8 +50,8 @@ public class User {
     /**
      * 创建时间
      */
-    @Column(value = "create_time", defaultValue = "NOW()")
-    private Date createTime;
+    @Column(value = "create_time_asc", defaultValue = "NOW()")
+    private Date createTimeAsc;
 
     /**
      * 逻辑列

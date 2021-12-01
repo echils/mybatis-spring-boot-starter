@@ -14,22 +14,22 @@ import java.util.List;
 public interface UserMapper extends SpecificationMapper<String, User> {
 
     /**
-     * 自定义方法：通过用户姓名查找
+     * 自定义方法：通过用户姓名查找并按注册时间排序
      * 将使用{@link DynamicMethodStatementLoader}动态解析方法名来注册Statement
      */
-    User findByName(String name);
+    User findByNameOrderByCreateTimeAscAsc(String name);
 
     /**
-     * 自定义方法：通过用年龄查找
+     * 自定义方法：通过用年龄和性别查找
      * 将使用{@link DynamicMethodStatementLoader}动态解析方法名来注册Statement
      */
-    List<User> findByAge(int age);
+    List<User> findByAgeAndSex(int age, String sex);
 
     /**
-     * 自定义方法：通过用性别查找
+     * 自定义方法：通过用性别或姓名模糊查找
      * 将使用{@link DynamicMethodStatementLoader}动态解析方法名来注册Statement
      */
-    User[] findBySex(String sex);
+    User[] findBySexOrNameLike(String sex, String name);
 
 }
 

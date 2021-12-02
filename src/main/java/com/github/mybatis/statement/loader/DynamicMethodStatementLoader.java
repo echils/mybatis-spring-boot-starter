@@ -8,13 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
-import org.apache.ibatis.scripting.xmltags.DynamicSqlSource;
-import org.apache.ibatis.scripting.xmltags.MixedSqlNode;
-import org.apache.ibatis.scripting.xmltags.SqlNode;
-import org.apache.ibatis.scripting.xmltags.StaticTextSqlNode;
+import org.apache.ibatis.scripting.xmltags.*;
 import org.apache.ibatis.session.Configuration;
 
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,7 +59,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
             sqlNodes.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
         }
 
-        sqlNodes.addAll(buildSqlNode(mappedMetaData));
+        sqlNodes.addAll(buildSqlNode(configuration, mappedMetaData));
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 
@@ -83,7 +81,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
     /**
      * 根据方法名构建
      */
-    private Collection<? extends SqlNode> buildSqlNode(MappedMetaData mappedMetaData) {
+    private Collection<? extends SqlNode> buildSqlNode(Configuration configuration, MappedMetaData mappedMetaData) {
 
         List<SqlNode> sqlNodes = new ArrayList<>();
         Method mappedMethod = mappedMetaData.getMappedMethod();
@@ -103,7 +101,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         methodName = orderParamParts[0];
         pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.OR.value));
         String[] orParamParts = pattern.split(methodName);
-        int paramIndex = 0;
+        int paramIndex = 1;
         for (String paramPart : orParamParts) {
             if (StringUtils.isNotBlank(paramPart)) {
                 pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.AND.value));
@@ -126,12 +124,39 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                             conditionPart = part;
                         }
                         if (conditionPart.argNum == 0) {
-                            sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION.apply(fieldMap
-                                    .get(property).getColumnName()) + conditionPart.value));
+                            sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
+                                    .apply(fieldMap.get(property).getColumnName()) + conditionPart.expression));
                         } else if (conditionPart.argNum == 1) {
+                            switch (conditionPart) {
+                                case EQUALS:
+                                case NOT_EQUALS:
+                                case LIKE:
+                                case NOT_LIKE:
+                                case STARTING_WITH:
+                                case ENDING_WITH:
+                                case LESS_THAN:
+                                case LESS_THAN_EQUAL:
+                                case GREATER_THAN:
+                                case GREATER_THAN_EQUAL:
+                                    sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
+                                            .apply(fieldMap.get(property).getColumnName())
+                                            + MessageFormat.format(conditionPart.expression, "#{param" + paramIndex++ + "}")));
+                                    break;
+                                case IN:
+                                case NOT_IN:
+                                    Class<?> paramType = mappedMethod.getParameterTypes()[paramIndex];
+                                    sqlNodes.add(new ForEachSqlNode(configuration,
+                                            new StaticTextSqlNode("#{item}"), mappedMethod.getParameterCount() > 1
+                                            ? "param" + paramIndex++ : paramType.isArray() ? "array" : "collection",
+                                            null, "item", "(", ")", ","));
+                                    break;
+                            }
 
                         } else if (conditionPart.argNum == 2) {
-
+                            sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
+                                    .apply(fieldMap.get(property).getColumnName())
+                                    + MessageFormat.format(conditionPart.expression,
+                                    "#{param" + paramIndex++ + "}", "#{param" + paramIndex++ + "}")));
                         }
                     }
                 }
@@ -142,7 +167,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
             String orderPart = orderParamParts[1];
             pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.AND.value));
             String[] andParamPart = pattern.split(orderPart);
-            StringBuilder sqlNode = new StringBuilder(" Order by ");
+            StringBuilder sqlNode = new StringBuilder(Part.ORDER_BY.expression);
             for (String orderParam : andParamPart) {
                 Matcher matcher = DIRECTION_SPLIT.matcher(orderParam);
                 if (!matcher.find()) {
@@ -181,25 +206,25 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
 
         AND("And"),
         OR("Or"),
-        EQUALS("Equals", 1),
-        NOT_EQUALS("NotEquals", 1),
-        BETWEEN("Between", 2),
-        NOT_BETWEEN("NotBetween", 2),
-        LESS_THAN("LessThan", 1),
-        LESS_THAN_EQUAL("LessThanEqual", 1),
-        GREATER_THAN("GreaterThan", 1),
-        GREATER_THAN_EQUAL("GreaterThanEqual", 1),
-        IS_NULL("IsNull"),
-        IS_NOT_NULL("IsNotNull"),
-        IS_BLANK("IsBlank"),
-        IS_NOT_BLANK("IsNotBlank"),
-        LIKE("Like", 1),
-        NOT_LIKE("NotLike", 1),
-        STARTING_WITH("StartingWith", 1),
-        ENDING_WITH("EndingWith", 1),
-        IN("In", 1),
-        NOT_IN("NotIn", 1),
-        ORDER_BY("OrderBy", 1);
+        EQUALS("Equals", 1, " = {0} "),
+        NOT_EQUALS("NotEquals", 1, " != {0} "),
+        BETWEEN("Between", 2, " BETWEEN {0} AND {1} "),
+        NOT_BETWEEN("NotBetween", 2, " NOT BETWEEN {0} AND {1} "),
+        LESS_THAN("LessThan", 1, " < {0} "),
+        LESS_THAN_EQUAL("LessThanEqual", 1, " <= {0} "),
+        GREATER_THAN("GreaterThan", 1, " > {0} "),
+        GREATER_THAN_EQUAL("GreaterThanEqual", 1, " >= {0} "),
+        IS_NULL("IsNull", " IS NULL "),
+        IS_NOT_NULL("IsNotNull", " IS NOT NULL "),
+        IS_BLANK("IsBlank", " ='' "),
+        IS_NOT_BLANK("IsNotBlank", " !='' "),
+        LIKE("Like", 1, " LIKE CONCAT(\"%\",{0} ,\"%\")"),
+        NOT_LIKE("NotLike", 1, " NOT LIKE CONCAT('%',{0} ,'%')"),
+        STARTING_WITH("StartingWith", 1, "LIKE CONCAT({0} ,'%') "),
+        ENDING_WITH("EndingWith", 1, "LIKE CONCAT('%',{0})"),
+        IN("In", 1, " IN "),
+        NOT_IN("NotIn", 1, " NOT IN "),
+        ORDER_BY("OrderBy", 1, " ORDER BY ");
 
         public String value;
 
@@ -211,9 +236,8 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
             this(value, 0, "");
         }
 
-        Part(String value, int argNum) {
-            this.value = value;
-            this.argNum = argNum;
+        Part(String value, String expression) {
+            this(value, 0, expression);
         }
 
         Part(String value, int argNum, String expression) {
@@ -229,5 +253,6 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         }
 
     }
+
 
 }

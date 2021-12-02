@@ -32,7 +32,6 @@ import static com.github.mybatis.MybatisExpandContext.underlineToHumpFunction;
 public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader {
 
     private static final List<String> EXPRESSION_PREFIX_TEMPLATE = new ArrayList<>();
-    private static Set<String> PART_SET;
     private static final String FIND_EXPRESSION_PREFIX = "findBy";
     private static final String SELECT_EXPRESSION_PREFIX = "selectBy";
     private static final String KEYWORD_TEMPLATE = "(%s)(?=(\\p{Lu}|\\P{InBASIC_LATIN}))";
@@ -42,8 +41,6 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
     public DynamicMethodStatementLoader() {
         EXPRESSION_PREFIX_TEMPLATE.add(FIND_EXPRESSION_PREFIX);
         EXPRESSION_PREFIX_TEMPLATE.add(SELECT_EXPRESSION_PREFIX);
-        PART_SET = Collections.unmodifiableSet(Arrays
-                .stream(Part.values()).map(part -> part.value).collect(Collectors.toSet()));
     }
 
     @Override
@@ -63,56 +60,31 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
             sqlNodes.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
         }
+
         sqlNodes.addAll(buildSqlNode(mappedMetaData));
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 
     @Override
     public boolean match(MappedMetaData mappedMetaData) {
-        Method mappedMethod = mappedMetaData.getMappedMethod();
-        String methodName = mappedMethod.getName();
         //方法名前缀校验
-        Optional<String> expressionPrefixOptional
-                = EXPRESSION_PREFIX_TEMPLATE.stream().filter(methodName::startsWith).findFirst();
-        if (!expressionPrefixOptional.isPresent()) {
-            log.debug("The mapped interface's method [{}] does not meet the "
-                    + "requirements for expanding the syntax tree,because the method name"
-                    + " expand statement must start with [" + FIND_EXPRESSION_PREFIX + " or "
-                    + SELECT_EXPRESSION_PREFIX + "]", mappedMetaData.getMappedStatementId());
-            return false;
+        Optional<String> expressionPrefixOptional = EXPRESSION_PREFIX_TEMPLATE.stream()
+                .filter(mappedMetaData.getMappedMethod().getName()::startsWith).findFirst();
+        if (expressionPrefixOptional.isPresent()) {
+            return true;
         }
-        String methodPrefix = expressionPrefixOptional.get();
-        methodName = methodName.substring(methodPrefix.length());
-        Set<String> fieldSet = mappedMetaData.getTableMetaData().getColumnMetaDataList().stream()
-                .map(ColumnMetaData::getFieldName).map(field -> underlineToHumpFunction.apply(field, true))
-                .collect(Collectors.toSet());
-        //关键字和属性值简单校验，如果存在属性和关键字相同的情况，不在本次校验范围,推迟到Statement构建时校验
-        Set<String> orderSet = Arrays.stream(Order.values()).map(order -> order.value).collect(Collectors.toSet());
-        if (PART_SET.stream().noneMatch(fieldSet::contains) && orderSet.stream().noneMatch(fieldSet::contains)) {
-            for (String keyword : PART_SET) {
-                methodName = methodName.replaceAll(keyword, FIELD_EXPRESSION_JOINT);
-            }
-            for (String order : orderSet) {
-                if (methodName.endsWith(order)) {
-                    methodName = methodName.substring(0, methodName.lastIndexOf(order));
-                }
-            }
-            Optional<String> illegalFieldOptional = Arrays.stream(methodName
-                    .split(FIELD_EXPRESSION_JOINT)).filter(key -> !fieldSet.contains(key)).findFirst();
-            if (illegalFieldOptional.isPresent()) {
-                log.debug("The mapped interface's method [{}] does not meet the "
-                        + "requirements for expanding the syntax tree,because the method contains " +
-                        "illegal field [{}]", mappedMetaData.getMappedStatementId(), illegalFieldOptional.get());
-                return false;
-            }
-        }
-        return true;
+        log.debug("The mapped interface's method [{}] does not meet the "
+                + "requirements for expanding the syntax tree,because the method name"
+                + " expand statement must start with [" + FIND_EXPRESSION_PREFIX + " or "
+                + SELECT_EXPRESSION_PREFIX + "]", mappedMetaData.getMappedStatementId());
+        return false;
     }
 
     /**
      * 根据方法名构建
      */
     private Collection<? extends SqlNode> buildSqlNode(MappedMetaData mappedMetaData) {
+
         List<SqlNode> sqlNodes = new ArrayList<>();
         Method mappedMethod = mappedMetaData.getMappedMethod();
         Map<String, ColumnMetaData> fieldMap = mappedMetaData.getTableMetaData().getColumnMetaDataList()
@@ -127,9 +99,11 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         if (orderParamParts.length > 2) {
             throw new IllegalArgumentException("OrderBy must not be used more than once in a method name!");
         }
+
         methodName = orderParamParts[0];
         pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.OR.value));
         String[] orParamParts = pattern.split(methodName);
+        int paramIndex = 0;
         for (String paramPart : orParamParts) {
             if (StringUtils.isNotBlank(paramPart)) {
                 pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.AND.value));
@@ -142,7 +116,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                                     "the entity class does not have this property[" + property + "]");
                         }
                         Part conditionPart = Part.EQUALS;
-                        String condition = param.replace(property, "");
+                        String condition = param.substring(property.length());
                         if (StringUtils.isNotBlank(condition)) {
                             Part part = Part.nameOf(condition);
                             if (part == null) {
@@ -151,8 +125,14 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                             }
                             conditionPart = part;
                         }
-                        sqlNodes.add(buildSqlNode(KEYWORDS_ESCAPE_FUNCTION
-                                .apply(fieldMap.get(property).getColumnName()), conditionPart));
+                        if (conditionPart.argNum == 0) {
+                            sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION.apply(fieldMap
+                                    .get(property).getColumnName()) + conditionPart.value));
+                        } else if (conditionPart.argNum == 1) {
+
+                        } else if (conditionPart.argNum == 2) {
+
+                        }
                     }
                 }
             }
@@ -160,32 +140,27 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
 
         if (orderParamParts.length == 2) {
             String orderPart = orderParamParts[1];
-            Matcher matcher = DIRECTION_SPLIT.matcher(orderPart);
-            if (!matcher.find()) {
-                throw new IllegalArgumentException("Invalid order syntax for part [" + orderPart + "]");
+            pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.AND.value));
+            String[] andParamPart = pattern.split(orderPart);
+            StringBuilder sqlNode = new StringBuilder(" Order by ");
+            for (String orderParam : andParamPart) {
+                Matcher matcher = DIRECTION_SPLIT.matcher(orderParam);
+                if (!matcher.find()) {
+                    throw new IllegalArgumentException("Invalid order syntax for part [" + orderPart + "]");
+                }
+                String propertyString = matcher.group(1);
+                if (!fieldSet.contains(propertyString)) {
+                    throw new IllegalArgumentException("Invalid order syntax for part [" + orderPart + "]," +
+                            "the entity class does not have this property[" + propertyString + "]");
+                }
+                sqlNode.append(KEYWORDS_ESCAPE_FUNCTION.apply(fieldMap
+                        .get(propertyString).getColumnName())).append(" ").append(matcher.group(2)).append(FIELD_EXPRESSION_JOINT);
             }
-            String propertyString = matcher.group(1);
-            if (!fieldSet.contains(propertyString)) {
-                throw new IllegalArgumentException("Invalid order syntax for part [" + orderPart + "]," +
-                        "the entity class does not have this property[" + propertyString + "]");
-            }
-            sqlNodes.add(new StaticTextSqlNode(" Order by " + KEYWORDS_ESCAPE_FUNCTION
-                    .apply(fieldMap.get(propertyString).getColumnName()) + " " + matcher.group(2)));
+            sqlNode.deleteCharAt(sqlNode.length() - 1);
+            sqlNodes.add(new StaticTextSqlNode(sqlNode.toString()));
         }
         return sqlNodes;
     }
-
-    /**
-     * 根据关键字构建
-     */
-    private SqlNode buildSqlNode(String column, Part part) {
-
-        switch (part) {
-
-        }
-        return null;
-    }
-
 
     /**
      * 提取属性值
@@ -230,13 +205,21 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
 
         public int argNum;
 
+        public String expression;
+
         Part(String value) {
-            this(value, 0);
+            this(value, 0, "");
         }
 
         Part(String value, int argNum) {
             this.value = value;
             this.argNum = argNum;
+        }
+
+        Part(String value, int argNum, String expression) {
+            this.value = value;
+            this.argNum = argNum;
+            this.expression = expression;
         }
 
         public static Part nameOf(String value) {
@@ -246,20 +229,5 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         }
 
     }
-
-    /**
-     * 排序关键字
-     */
-    enum Order {
-
-        ASC("Asc"),
-        DESC("Desc");
-        public String value;
-
-        Order(String value) {
-            this.value = value;
-        }
-    }
-
 
 }

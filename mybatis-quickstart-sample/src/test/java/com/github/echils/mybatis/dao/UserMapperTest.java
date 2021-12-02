@@ -155,7 +155,7 @@ public class UserMapperTest {
         DynamicParam dynamicParam = new DynamicParam();
         dynamicParam.where(condition -> condition.between("age", 21, 24));
         dynamicParam.where(condition -> condition.rightLike("name", "ec"));
-        dynamicParam.where(condition -> condition.gt("create_time", "2021-01-01"));
+        dynamicParam.where(condition -> condition.gt("create_time_asc", "2021-01-01"));
         System.out.println(userMapper.count(dynamicParam));
     }
 

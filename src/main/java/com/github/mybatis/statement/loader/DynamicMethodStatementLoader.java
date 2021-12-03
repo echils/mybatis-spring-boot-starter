@@ -101,7 +101,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         methodName = orderParamParts[0];
         pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.OR.value));
         String[] orParamParts = pattern.split(methodName);
-        int paramIndex = 1;
+        int paramIndex = 0;
         for (String paramPart : orParamParts) {
             if (StringUtils.isNotBlank(paramPart)) {
                 pattern = Pattern.compile(String.format(KEYWORD_TEMPLATE, Part.AND.value));
@@ -140,14 +140,20 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                                 case GREATER_THAN_EQUAL:
                                     sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
                                             .apply(fieldMap.get(property).getColumnName())
-                                            + MessageFormat.format(conditionPart.expression, "#{param" + paramIndex++ + "}")));
+                                            + MessageFormat.format(conditionPart.expression, "#{param" + ++paramIndex + "}")));
                                     break;
                                 case IN:
                                 case NOT_IN:
                                     Class<?> paramType = mappedMethod.getParameterTypes()[paramIndex];
+                                    if (!paramType.isArray() && !Collection.class.isAssignableFrom(paramType)) {
+                                        throw new IllegalArgumentException("Invalid order syntax because of the parameter" +
+                                                " corresponding to [In or NotIn] must be array or collection");
+                                    }
+                                    sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
+                                            .apply(fieldMap.get(property).getColumnName()) + conditionPart.expression));
                                     sqlNodes.add(new ForEachSqlNode(configuration,
                                             new StaticTextSqlNode("#{item}"), mappedMethod.getParameterCount() > 1
-                                            ? "param" + paramIndex++ : paramType.isArray() ? "array" : "collection",
+                                            ? "param" + ++paramIndex : paramType.isArray() ? "array" : "collection",
                                             null, "item", "(", ")", ","));
                                     break;
                             }
@@ -156,7 +162,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                             sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
                                     .apply(fieldMap.get(property).getColumnName())
                                     + MessageFormat.format(conditionPart.expression,
-                                    "#{param" + paramIndex++ + "}", "#{param" + paramIndex++ + "}")));
+                                    "#{param" + ++paramIndex + "}", "#{param" + ++paramIndex + "}")));
                         }
                     }
                 }
@@ -219,9 +225,9 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         IS_BLANK("IsBlank", " ='' "),
         IS_NOT_BLANK("IsNotBlank", " !='' "),
         LIKE("Like", 1, " LIKE CONCAT(\"%\",{0} ,\"%\")"),
-        NOT_LIKE("NotLike", 1, " NOT LIKE CONCAT('%',{0} ,'%')"),
-        STARTING_WITH("StartingWith", 1, "LIKE CONCAT({0} ,'%') "),
-        ENDING_WITH("EndingWith", 1, "LIKE CONCAT('%',{0})"),
+        NOT_LIKE("NotLike", 1, " NOT LIKE CONCAT(\"%\",{0} ,\"%\")"),
+        STARTING_WITH("StartingWith", 1, " LIKE CONCAT({0} ,\"%\") "),
+        ENDING_WITH("EndingWith", 1, " LIKE CONCAT(\"%\",{0})"),
         IN("In", 1, " IN "),
         NOT_IN("NotIn", 1, " NOT IN "),
         ORDER_BY("OrderBy", 1, " ORDER BY ");

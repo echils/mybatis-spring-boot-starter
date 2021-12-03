@@ -1,13 +1,14 @@
 package com.github.echils.mybatis.dao;
 
 import com.github.echils.mybatis.model.User;
-import com.github.mybatis.specification.condition.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Arrays;
 
 
 /**
@@ -145,18 +146,27 @@ public class UserMapperTest {
 //        System.out.println(userMapper.findAll(dynamicParam));
 //    }
 
+//    @Test
+//    public void testCount() {
+//
+//        //查询总数
+//        System.out.println(userMapper.total());
+//
+//        //动态统计
+//        DynamicParam dynamicParam = new DynamicParam();
+//        dynamicParam.where(condition -> condition.between("age", 21, 24));
+//        dynamicParam.where(condition -> condition.rightLike("name", "ec"));
+//        dynamicParam.where(condition -> condition.gt("create_time_asc", "2021-01-01"));
+//        System.out.println(userMapper.count(dynamicParam));
+//    }
+
     @Test
-    public void testCount() {
-
-        //查询总数
-        System.out.println(userMapper.total());
-
-        //动态统计
-        DynamicParam dynamicParam = new DynamicParam();
-        dynamicParam.where(condition -> condition.between("age", 21, 24));
-        dynamicParam.where(condition -> condition.rightLike("name", "ec"));
-        dynamicParam.where(condition -> condition.gt("create_time_asc", "2021-01-01"));
-        System.out.println(userMapper.count(dynamicParam));
+    public void testMethod() {
+        System.out.println(userMapper.findByAgeAndSex(24, "女"));
+        System.out.println(userMapper.findByAgeBetween(21, 25));
+        System.out.println(userMapper.findByNameIn(Arrays.asList("echils", "echils2")));
+        System.out.println(userMapper.findByNameStartingWithOrderByCreateTimeAscAscAndAgeDesc("ec"));
+        System.out.println(Arrays.toString(userMapper.findBySexOrNameLike("女", "2")));
     }
 
 }

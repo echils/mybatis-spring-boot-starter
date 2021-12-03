@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -146,22 +147,8 @@ public class MappedMetaData {
         Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
         Class<?> returnType = mappedMethod.getReturnType();
         String defaultMappedId = getMappedStatementId() + "-" + EXPAND_DEFAULT_RESULT_MAP;
-        if (isExpandMethod(mappedMethod)) {
-            return returnType.isPrimitive() ? new ResultMap.Builder(configuration,
-                    defaultMappedId, returnType, Collections.emptyList()).build() : getEntityResultMap(configuration);
-        }
-        if (entityClass.isAssignableFrom(returnType)) {
-            return getEntityResultMap(configuration);
-        } else if (returnType.isArray()) {
-            returnType = returnType.getComponentType();
-            if (entityClass.isAssignableFrom(returnType)) {
-                return getEntityResultMap(configuration);
-            }
-        }
-        if (returnType.isPrimitive()) {
-            return new ResultMap.Builder(configuration, defaultMappedId, returnType, Collections.emptyList()).build();
-        }
-        return new ResultMap.Builder(configuration, defaultMappedId, Object.class, Collections.emptyList()).build();
+        return returnType.isPrimitive() ? new ResultMap.Builder(configuration,
+                defaultMappedId, returnType, Collections.emptyList()).build() : getEntityResultMap(configuration);
     }
 
 

@@ -4,6 +4,7 @@ import com.github.mybatis.specification.DynamicMapper;
 import com.github.mybatis.specification.SpecificationMapper;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.ResultFlag;
 import org.apache.ibatis.mapping.ResultMap;
@@ -11,12 +12,12 @@ import org.apache.ibatis.mapping.ResultMapping;
 import org.apache.ibatis.session.Configuration;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.BeanUtils;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.mybatis.MybatisExpandContext.*;
@@ -145,10 +146,34 @@ public class MappedMetaData {
      */
     public ResultMap getMappedStatementResultMap() {
         Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
-        Class<?> returnType = mappedMethod.getReturnType();
         String defaultMappedId = getMappedStatementId() + "-" + EXPAND_DEFAULT_RESULT_MAP;
-        return returnType.isPrimitive() ? new ResultMap.Builder(configuration,
-                defaultMappedId, returnType, Collections.emptyList()).build() : getEntityResultMap(configuration);
+        Type returnType = mappedMethod.getGenericReturnType();
+        Class<?> returnClazzType = null;
+        if (returnType instanceof ParameterizedType) {
+            ParameterizedTypeImpl parameterizedType = (ParameterizedTypeImpl) returnType;
+            Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+            if (ArrayUtils.isNotEmpty(actualTypeArguments)) {
+                Optional<Type> optionalType = Arrays.stream(actualTypeArguments)
+                        .filter(type -> type instanceof Class).findFirst();
+                if (optionalType.isPresent()) {
+                    returnClazzType = (Class) optionalType.get();
+                }
+            }
+        } else if (returnType instanceof Class) {
+            returnClazzType = (Class) returnType;
+            if (returnClazzType.isArray()) {
+                returnClazzType = returnClazzType.getComponentType();
+            }
+        }
+        if (returnClazzType != null) {
+            if (returnClazzType.isPrimitive()) {
+                return new ResultMap.Builder(configuration,
+                        defaultMappedId, returnClazzType, Collections.emptyList()).build();
+            } else if (entityClass == returnClazzType) {
+                return getEntityResultMap(configuration);
+            }
+        }
+        return new ResultMap.Builder(configuration, defaultMappedId, Object.class, Collections.emptyList()).build();
     }
 
 

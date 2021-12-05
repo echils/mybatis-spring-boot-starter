@@ -2,6 +2,11 @@ package com.github.mybatis;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -117,5 +122,21 @@ public class MybatisExpandContext {
         }
         return builder.toString();
     };
+
+
+    /**
+     * 递归获取实体类所有属性
+     *
+     * @param entityClazz 实体类
+     */
+    public static List<Field> obtainEntityFields(Class<?> entityClazz) {
+        if (entityClazz == null || entityClazz.isInterface()) {
+            return Collections.emptyList();
+        }
+        List<Field> fields = new ArrayList<>();
+        fields.addAll(obtainEntityFields(entityClazz.getSuperclass()));
+        fields.addAll(Arrays.asList(entityClazz.getDeclaredFields()));
+        return fields;
+    }
 
 }

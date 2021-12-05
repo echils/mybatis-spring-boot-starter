@@ -1,7 +1,5 @@
 package com.github.mybatis.statement.metadata;
 
-import com.github.mybatis.specification.DynamicMapper;
-import com.github.mybatis.specification.SpecificationMapper;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -14,6 +12,7 @@ import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.beans.BeanUtils;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -148,7 +147,7 @@ public class MappedMetaData {
         Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
         String defaultMappedId = getMappedStatementId() + "-" + EXPAND_DEFAULT_RESULT_MAP;
         Type returnType = mappedMethod.getGenericReturnType();
-        Class<?> returnClazzType = null;
+        Class<?> returnClazzType = Object.class;
         if (returnType instanceof ParameterizedType) {
             ParameterizedTypeImpl parameterizedType = (ParameterizedTypeImpl) returnType;
             Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
@@ -165,15 +164,13 @@ public class MappedMetaData {
                 returnClazzType = returnClazzType.getComponentType();
             }
         }
-        if (returnClazzType != null) {
-            if (returnClazzType.isPrimitive()) {
-                return new ResultMap.Builder(configuration,
-                        defaultMappedId, returnClazzType, Collections.emptyList()).build();
-            } else if (entityClass == returnClazzType) {
-                return getEntityResultMap(configuration);
-            }
+        if (returnClazzType.isPrimitive()) {
+            return new ResultMap.Builder(configuration,
+                    defaultMappedId, returnClazzType, Collections.emptyList()).build();
+        } else if (entityClass == returnClazzType) {
+            return getEntityResultMap(configuration);
         }
-        return new ResultMap.Builder(configuration, defaultMappedId, Object.class, Collections.emptyList()).build();
+        return getReturnClassResultMap(configuration, defaultMappedId, returnClazzType);
     }
 
 
@@ -204,12 +201,37 @@ public class MappedMetaData {
 
 
     /**
-     * 是否内置拓展增强方法
+     *
+     * 根据返回值构建结果集
      */
-    private boolean isExpandMethod(Method method) {
-        String methodString = method.toString();
-        return methodString.contains(SpecificationMapper.class.getName()) ||
-                methodString.contains(DynamicMapper.class.getName());
+    private ResultMap getReturnClassResultMap(Configuration configuration,
+                                              String mappedStatementId,
+                                              Class<?> returnClass) {
+        if (configuration.hasResultMap(mappedStatementId)) {
+            return configuration.getResultMap(mappedStatementId);
+        }
+        List<Field> fields = obtainEntityFields(returnClass);
+
+        List<ResultMapping> resultMappingList = tableMetaData.getColumnMetaDataList()
+                .stream().filter(columnMetaData -> {
+                    boolean match = false;
+                    for (Field field : fields) {
+                        if (columnMetaData.getFieldName().equals(field.getName())
+                                && columnMetaData.getJavaType() == field.getType()) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    return match;
+                }).map(columnMetaData -> {
+                    List<ResultFlag> flags = columnMetaData.isPrimaryKey() ?
+                            Collections.singletonList(ResultFlag.ID) : new ArrayList<>();
+                    return new ResultMapping.Builder(configuration, columnMetaData.getFieldName(),
+                            columnMetaData.getColumnName(), columnMetaData.getJavaType())
+                            .jdbcType(columnMetaData.getJdbcType()).flags(flags).build();
+                }).collect(Collectors.toList());
+        return new ResultMap
+                .Builder(configuration, mappedStatementId, returnClass, resultMappingList).build();
     }
 
 }

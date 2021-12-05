@@ -46,4 +46,5 @@ public class ColumnMetaData implements Cloneable {
     protected ColumnMetaData clone() throws CloneNotSupportedException {
         return (ColumnMetaData) super.clone();
     }
+
 }

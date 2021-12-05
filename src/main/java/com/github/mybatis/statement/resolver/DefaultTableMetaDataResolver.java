@@ -11,15 +11,15 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.type.JdbcType;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.github.mybatis.MybatisExpandContext.MariaDB;
-import static com.github.mybatis.MybatisExpandContext.MySQL;
+import static com.github.mybatis.MybatisExpandContext.*;
 
 /**
  * 默认表元数据解析器
@@ -151,22 +151,6 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
         }
         return databaseColumnInfoList;
     }
-
-    /**
-     * 递归获取实体类所有属性
-     *
-     * @param entityClazz 实体类
-     */
-    private List<Field> obtainEntityFields(Class<?> entityClazz) {
-        if (entityClazz == null || entityClazz.isInterface()) {
-            return Collections.emptyList();
-        }
-        List<Field> fields = new ArrayList<>();
-        fields.addAll(obtainEntityFields(entityClazz.getSuperclass()));
-        fields.addAll(Arrays.asList(entityClazz.getDeclaredFields()));
-        return fields;
-    }
-
 
     /**
      * 数据库列信息

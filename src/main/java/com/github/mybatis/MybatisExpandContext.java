@@ -133,6 +133,7 @@ public class MybatisExpandContext {
         if (entityClazz == null || entityClazz.isInterface()) {
             return Collections.emptyList();
         }
+        //TODO 复合主键情况
         List<Field> fields = new ArrayList<>();
         fields.addAll(obtainEntityFields(entityClazz.getSuperclass()));
         fields.addAll(Arrays.asList(entityClazz.getDeclaredFields()));

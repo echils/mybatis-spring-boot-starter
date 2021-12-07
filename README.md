@@ -157,4 +157,4 @@ public interface UserMapper extends SpecificationMapper<String, User> {
 ##### 3、Use the mapper as usual in the project
 
 ## More Usage Samples
-Demo:&nbsp;&nbsp;[quick-start-sample](mybais-quick-start-sample) 
+Demo:&nbsp;&nbsp;[quick-start-sample](mybatis-quickstart-sample) 

@@ -1,5 +1,7 @@
 package com.github.mybatis.statement.metadata;
 
+import com.github.mybatis.specification.DynamicMapper;
+import com.github.mybatis.specification.SpecificationMapper;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -145,8 +147,13 @@ public class MappedMetaData {
      */
     public ResultMap getMappedStatementResultMap() {
         Configuration configuration = mapperFactoryBean.getSqlSession().getConfiguration();
-        String defaultMappedId = getMappedStatementId() + "-" + EXPAND_DEFAULT_RESULT_MAP;
         Type returnType = mappedMethod.getGenericReturnType();
+        String defaultMappedId = getMappedStatementId() + "-" + EXPAND_DEFAULT_RESULT_MAP;
+        if (isExpandMethod(mappedMethod)) {
+            return mappedMethod.getReturnType().isPrimitive() ? new ResultMap.Builder(configuration,
+                    defaultMappedId, mappedMethod.getReturnType(), Collections.emptyList()).build() : getEntityResultMap(configuration);
+        }
+
         Class<?> returnClazzType = Object.class;
         if (returnType instanceof ParameterizedType) {
             ParameterizedTypeImpl parameterizedType = (ParameterizedTypeImpl) returnType;
@@ -234,4 +241,12 @@ public class MappedMetaData {
                 .Builder(configuration, mappedStatementId, returnClass, resultMappingList).build();
     }
 
+    /**
+     * 是否内置拓展增强方法
+     */
+    private boolean isExpandMethod(Method method) {
+        String methodString = method.toString();
+        return methodString.contains(SpecificationMapper.class.getName()) ||
+                methodString.contains(DynamicMapper.class.getName());
+    }
 }

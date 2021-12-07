@@ -1,6 +1,5 @@
 package com.github.echils.mybatis.model;
 
-import com.github.mybatis.annotations.Column;
 import lombok.Data;
 
 import java.util.Date;
@@ -41,7 +40,6 @@ public class UserView {
     /**
      * 创建时间
      */
-    @Column(defaultValue = "NOW()")
     private Date createTime;
 
     /**

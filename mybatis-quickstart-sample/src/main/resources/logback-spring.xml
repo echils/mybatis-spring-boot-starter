@@ -2,7 +2,7 @@
 <configuration>
     <springProperty scope="context" name="application" source="spring.application.name"/>
     <springProperty scope="context" name="profiles" source="spring.profiles.active"/>
-    <springProperty scope="context" name="log.dir" source="logging.path" defaultValue="../log"/>
+    <springProperty scope="context" name="log.dir" source="logging.path" defaultValue="/log"/>
     <springProperty scope="context" name="log.file" source="logging.file" defaultValue="${application}-${profiles}"/>
 
     <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>

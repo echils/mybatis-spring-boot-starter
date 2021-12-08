@@ -28,7 +28,7 @@ This starter can provide common MyBatis functions for developers by default with
     <version>1.0-SNAPSHOT</version>
 </dependency>
 ````
-##### 2、Extend from [SpecificationMapper](./src/main/java/com/github/mybatis/specification/SpecificationMapper.java) or [DynamicMapper](./src/main/java/com/github/mybatis/specification/DynamicMapper.java).Using the user table as an example, extend from SpecificationMapper will automatically register CURD interfaces, and then I define some interfaces to query by method
+##### 2、Extend from [SpecificationMapper](./src/main/java/com/github/mybatis/specification/SpecificationMapper.java) or [DynamicMapper](./src/main/java/com/github/mybatis/specification/DynamicMapper.java).Using the user table as an example, extend from SpecificationMapper will automatically register CRUD interfaces, and then I define some interfaces to query by method
 ````
 package com.github.echils.mybatis.model;
 
@@ -133,7 +133,7 @@ public interface UserMapper extends SpecificationMapper<String, User> {
     List<UserView> findByNameStartingWithOrderByCreateTimeAscAndAgeDesc(String name);
 
     /**
-     * 自定义方法：通过用年龄和性别查找
+     * 自定义方法：通过年龄和性别查找
      * 将使用{@link DynamicMethodStatementLoader}动态解析方法名来注册Statement
      */
     UserView findByAgeAndSex(int age, String sex);
@@ -145,7 +145,7 @@ public interface UserMapper extends SpecificationMapper<String, User> {
     Set<User> findByAgeBetween(int minAge, int maxAge);
 
     /**
-     * 自定义方法：通过年龄段查询
+     * 自定义方法：通过姓名批量查询
      * 将使用{@link DynamicMethodStatementLoader}动态解析方法名来注册Statement
      */
     List<User> findByNameIn(List<String> names);

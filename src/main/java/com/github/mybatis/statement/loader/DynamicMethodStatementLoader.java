@@ -18,8 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.github.mybatis.MybatisExpandContext.KEYWORDS_ESCAPE_FUNCTION;
-import static com.github.mybatis.MybatisExpandContext.underlineToHumpFunction;
+import static com.github.mybatis.MybatisExpandContext.*;
 
 /**
  * 动态方法名查询功能加载器
@@ -149,12 +148,14 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                                         throw new IllegalArgumentException("Invalid order syntax because of the parameter" +
                                                 " corresponding to [In or NotIn] must be array or collection");
                                     }
-                                    sqlNodes.add(new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
-                                            .apply(fieldMap.get(property).getColumnName()) + conditionPart.expression));
-                                    sqlNodes.add(new ForEachSqlNode(configuration,
-                                            new StaticTextSqlNode("#{item}"), mappedMethod.getParameterCount() > 1
-                                            ? "param" + ++paramIndex : paramType.isArray() ? "array" : "collection",
-                                            null, "item", "(", ")", ","));
+                                    String paramItem = mappedMethod.getParameterCount() > 1
+                                            ? "param" + ++paramIndex : paramType.isArray() ? "array" : "collection";
+                                    sqlNodes.add(new IfSqlNode(new MixedSqlNode(Arrays.asList(
+                                            new StaticTextSqlNode(" And " + KEYWORDS_ESCAPE_FUNCTION
+                                                    .apply(fieldMap.get(property).getColumnName()) + conditionPart.expression),
+                                            new ForEachSqlNode(configuration, new StaticTextSqlNode("#{item}"), paramItem,
+                                                    null, "item", "(", ")", ","))),
+                                            String.format(MYBATIS_TEST_EXPRESSION, paramItem)));
                                     break;
                             }
 

@@ -28,6 +28,8 @@ public class UserMapperTest {
 
     private User user;
 
+    private User user2;
+
     @Before
     public void test() {
         user = new User();
@@ -36,6 +38,12 @@ public class UserMapperTest {
         user.setAge(25);
         user.setSex("男");
         user.setLogical(true);
+        user2 = new User();
+        user2.setId("777");
+        user2.setName("echils");
+        user2.setAge(24);
+        user2.setSex("女");
+        user2.setLogical(true);
     }
 
     @Test
@@ -44,13 +52,12 @@ public class UserMapperTest {
     }
 
     @Test
+    public void insertSelective() {
+        userMapper.insertSelective(user);
+    }
+
+    @Test
     public void insertBatch() {
-        User user2 = new User();
-        user2.setId("777");
-        user2.setName("echils");
-        user2.setAge(24);
-        user2.setSex("女");
-        user2.setLogical(true);
         userMapper.insertBatch(Arrays.asList(user2, user));
     }
 
@@ -63,7 +70,6 @@ public class UserMapperTest {
     public void selectByPrimaryKeys() {
         System.out.println(userMapper.selectByPrimaryKeys(Arrays.asList("666", "777")));
     }
-
 
     @Test
     public void deleteByPrimaryKey() {
@@ -78,11 +84,6 @@ public class UserMapperTest {
     @Test
     public void existByPrimaryKey() {
         System.out.println(userMapper.existByPrimaryKey("666"));
-    }
-
-    @Test
-    public void insertSelective() {
-        userMapper.insertSelective(user);
     }
 
     @Test

@@ -62,7 +62,7 @@ public class UpdateBatchStatementLoader extends AbstractExpandStatementLoader {
         keySqlNodeList.addAll(primaryKeyColumnList.stream().map(columnMetaData ->
                 new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + String.format(MYBATIS_PARAM_EXPRESSION,
                         MYBATIS_FOREACH_PARAM + "." +columnMetaData.getFieldName(), columnMetaData.getJdbcType()))).collect(Collectors.toList()));
-        sqlNodeList.add(new WhereSqlNode(configuration, new MixedSqlNode(keySqlNodeList)));;
+        sqlNodeList.add(new WhereSqlNode(configuration, new MixedSqlNode(keySqlNodeList)));
 
         return new DynamicSqlSource(configuration, new ForEachSqlNode(configuration,
                 new MixedSqlNode(sqlNodeList), "collection",

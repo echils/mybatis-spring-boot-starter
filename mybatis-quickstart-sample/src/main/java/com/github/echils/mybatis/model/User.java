@@ -30,7 +30,7 @@ public class User {
     /**
      * 年龄
      */
-    private int age;
+    private Integer age;
 
     /**
      * 性别

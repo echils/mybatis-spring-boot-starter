@@ -65,6 +65,11 @@ public class MybatisExpandContext {
     /**
      * Mybatis XML 参数表达式
      */
+    public static final String MYBATIS_PARAM_SIMPLE_EXPRESSION = "#{%s}";
+
+    /**
+     * Mybatis XML 参数表达式
+     */
     public static final String MYBATIS_TEST_EXPRESSION = "%s != null";
 
     /**

@@ -25,13 +25,13 @@ public interface UserMapper extends SpecificationMapper<String, User> {
      * 自定义方法：通过用年龄和性别查找
      * 将使用{@link DynamicMethodStatementLoader}动态解析方法名来注册Statement
      */
-    UserView findByAgeAndSex(int age, String sex);
+    UserView findByAgeAndSex(Integer age, String sex);
 
     /**
      * 自定义方法：通过年龄段查询
      * 将使用{@link DynamicMethodStatementLoader}动态解析方法名来注册Statement
      */
-    Set<User> findByAgeBetween(int minAge, int maxAge);
+    Set<User> findByAgeBetween(Integer minAge, Integer maxAge);
 
     /**
      * 自定义方法：通过年龄段查询

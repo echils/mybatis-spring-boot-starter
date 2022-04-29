@@ -11,8 +11,7 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.*;
 import org.apache.ibatis.session.Configuration;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.mybatis.MybatisExpandContext.*;
@@ -54,21 +53,31 @@ public class SelectByPrimaryKeysStatementLoader extends AbstractExpandStatementL
                 .stream().filter(ColumnMetaData::isPrimaryKey).collect(Collectors.toList());
         //联合主键
         if (primaryKeyColumnDataList.size() > UNIQUE_PRIMARY_KEY_INDEX) {
-            List<String> columnList = primaryKeyColumnDataList.stream().map(columnMetaData
-                    -> MYBATIS_FOREACH_PARAM + "." + KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()))
-                    .collect(Collectors.toList());
-            String condition = String.join(" AND ", columnList);
-            sqlNodes.add(new ForEachSqlNode(configuration, new StaticTextSqlNode(" AND " + condition),
-                    "collection", "index", MYBATIS_FOREACH_PARAM,
-                    "(", ")", " OR "));
+            Map<String, String> primaryMap = primaryKeyColumnDataList.stream().collect(Collectors.toMap(
+                    columnMetaData -> KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()),
+                    columnMetaData -> String.format(MYBATIS_PARAM_SIMPLE_EXPRESSION, MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName())));
+            ArrayList<String> columns = new ArrayList<>();
+            ArrayList<String> fields = new ArrayList<>();
+            primaryMap.forEach((key, value) -> { columns.add(key); fields.add(value); });
+            ArrayList<String> blanks = new ArrayList<>();
+            for (int i = 0; i < primaryMap.keySet().size(); i++) { blanks.add("''");}
+            sqlNodes.add(new StaticTextSqlNode(" AND "));
+            sqlNodes.add(new StaticTextSqlNode("(" + String.join(",", String.join(",", columns) + ") IN ")));
+            sqlNodes.add(new ChooseSqlNode(Collections.singletonList(new IfSqlNode(
+                    new ForEachSqlNode(configuration, new StaticTextSqlNode("( " + String.join(",", fields) + ") "),
+                            "collection", null, MYBATIS_FOREACH_PARAM,
+                            "(", ")", ","),
+                    "collection != null && collection.size > 0")), new StaticTextSqlNode("((" + String.join(",", blanks) + "))")));
         } else {
-        //唯一主键
+            //唯一主键
             ColumnMetaData columnMetaData = primaryKeyColumnDataList.get(0);
             sqlNodes.add(new StaticTextSqlNode(" AND " + KEYWORDS_ESCAPE_FUNCTION
                     .apply(columnMetaData.getColumnName()) + " IN "));
-            sqlNodes.add(new ForEachSqlNode(configuration, new StaticTextSqlNode("#{item}"),
-                    "collection", null, MYBATIS_FOREACH_PARAM,
-                    "(", ")", ","));
+            sqlNodes.add(new ChooseSqlNode(Collections.singletonList(new IfSqlNode(
+                    new ForEachSqlNode(configuration, new StaticTextSqlNode("#{item}"),
+                            "collection", null, MYBATIS_FOREACH_PARAM,
+                            "(", ")", ","),
+                    "collection != null && collection.size > 0")), new StaticTextSqlNode("('')")));
         }
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
@@ -77,4 +86,5 @@ public class SelectByPrimaryKeysStatementLoader extends AbstractExpandStatementL
     public boolean match(MappedMetaData mappedMetaData) {
         return mappedMetaData.getMappedMethod().toString().contains(EXPAND_STATEMENT_METHOD);
     }
+
 }

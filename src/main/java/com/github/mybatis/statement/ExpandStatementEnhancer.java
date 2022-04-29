@@ -90,7 +90,7 @@ public class ExpandStatementEnhancer {
         if (isNecessaryOfPrimaryKey(mapperInterface) && !primaryKeyColumnOptional.isPresent()) {
             throw new MybatisExpandException("The entity class [" + entityClazz + "] has no primary key in the " +
                     "corresponding table,please add primary key for it or use " +
-                    "the expandMapper [" + DynamicMapper.class.getName() + "]");
+                    "the expand mapper [" + DynamicMapper.class.getName() + "]");
         }
 
         Arrays.stream(mapperInterface.getMethods())

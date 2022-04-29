@@ -10,8 +10,7 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.*;
 import org.apache.ibatis.session.Configuration;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.mybatis.MybatisExpandContext.*;
@@ -61,24 +60,35 @@ public class UpdateSelectiveBatchStatementLoader extends AbstractExpandStatement
                 null, null, null, ",")));
 
         List<SqlNode> keySqlNodeList = new LinkedList<>();
-        //唯一主键
-        if (primaryKeyColumnList.size() == UNIQUE_PRIMARY_KEY_INDEX) {
+        //联合主键
+        if (primaryKeyColumnList.size() > UNIQUE_PRIMARY_KEY_INDEX) {
+            Map<String, String> primaryMap = primaryKeyColumnList.stream().collect(Collectors.toMap(
+                    columnMetaData -> KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()),
+                    columnMetaData -> String.format(MYBATIS_PARAM_SIMPLE_EXPRESSION, MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName())));
+            ArrayList<String> columns = new ArrayList<>();
+            ArrayList<String> fields = new ArrayList<>();
+            primaryMap.forEach((key, value) -> { columns.add(key); fields.add(value); });
+            ArrayList<String> blanks = new ArrayList<>();
+            for (int i = 0; i < primaryMap.keySet().size(); i++) { blanks.add("''");}
+            keySqlNodeList.add(new StaticTextSqlNode(" AND "));
+            keySqlNodeList.add(new StaticTextSqlNode("(" + String.join(",", String.join(",", columns) + ") IN ")));
+            keySqlNodeList.add(new ChooseSqlNode(Collections.singletonList(new IfSqlNode(
+                    new ForEachSqlNode(configuration, new StaticTextSqlNode("( " + String.join(",", fields) + ") "),
+                            "param1", null, MYBATIS_FOREACH_PARAM,
+                            "(", ")", ","),
+                    "param1 != null && param1.size > 0")), new StaticTextSqlNode("((" + String.join(",", blanks) + "))")));
+        } else {
+            //唯一主键
             ColumnMetaData columnMetaData = primaryKeyColumnList.get(0);
             keySqlNodeList.add(new StaticTextSqlNode(" AND " + KEYWORDS_ESCAPE_FUNCTION
                     .apply(columnMetaData.getColumnName()) + " IN "));
-            keySqlNodeList.add(new ForEachSqlNode(configuration, new StaticTextSqlNode("#{item}"),
-                    "param1", null, MYBATIS_FOREACH_PARAM,
-                    "(", ")", ","));
-        } else {
-        //联合主键
-            List<String> columnList = primaryKeyColumnList.stream().map(columnMetaData
-                    -> MYBATIS_FOREACH_PARAM + "." + KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()))
-                    .collect(Collectors.toList());
-            String condition = String.join(" AND ", columnList);
-            keySqlNodeList.add(new ForEachSqlNode(configuration, new StaticTextSqlNode(" AND " + condition),
-                    "param1", "index", MYBATIS_FOREACH_PARAM,
-                    "(", ")", " OR "));
+            keySqlNodeList.add(new ChooseSqlNode(Collections.singletonList(new IfSqlNode(
+                    new ForEachSqlNode(configuration, new StaticTextSqlNode("#{item}"),
+                            "param1", null, MYBATIS_FOREACH_PARAM,
+                            "(", ")", ","),
+                    "param1 != null && param1.size > 0")), new StaticTextSqlNode("('')")));
         }
+
         sqlNodeList.add(new WhereSqlNode(configuration, new MixedSqlNode(keySqlNodeList)));
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodeList));
     }

@@ -109,16 +109,16 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                     if (StringUtils.isNotBlank(param)) {
                         String property = extractProperty(param);
                         if (!fieldSet.contains(property)) {
-                            throw new IllegalArgumentException("Invalid syntax because of " +
-                                    "the entity class does not have this property[" + property + "]");
+                            throw new IllegalArgumentException("Invalid syntax of " +
+                                    "the method [" + mappedMethod.getDeclaringClass().getName() + "." + mappedMethod.getName() + "] because the param [" + property + "] is illegal");
                         }
                         Part conditionPart = Part.EQUALS;
                         String condition = param.substring(property.length());
                         if (StringUtils.isNotBlank(condition)) {
                             Part part = Part.nameOf(condition);
                             if (part == null) {
-                                throw new IllegalArgumentException("Invalid syntax because of " +
-                                        "no support the condition [" + property + "]");
+                                throw new IllegalArgumentException("Invalid syntax of " +
+                                        "the method [" + mappedMethod.getDeclaringClass().getName() + "." + mappedMethod.getName() + "] because no support the condition [" + property + "]");
                             }
                             conditionPart = part;
                         }
@@ -145,8 +145,9 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                                 case NOT_IN:
                                     Class<?> paramType = mappedMethod.getParameterTypes()[paramIndex];
                                     if (!paramType.isArray() && !Collection.class.isAssignableFrom(paramType)) {
-                                        throw new IllegalArgumentException("Invalid order syntax because of the parameter" +
-                                                " corresponding to [In or NotIn] must be array or collection");
+                                        throw new IllegalArgumentException("Invalid syntax of " +
+                                                "the method [" + mappedMethod.getDeclaringClass().getName() + "." + mappedMethod.getName() + "] because the parameter" +
+                                                "must be array or collection when condition corresponding to [In or NotIn]");
                                     }
                                     String paramItem = mappedMethod.getParameterCount() > 1
                                             ? "param" + ++paramIndex : paramType.isArray() ? "array" : "collection";
@@ -178,12 +179,13 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
             for (String orderParam : andParamPart) {
                 Matcher matcher = DIRECTION_SPLIT.matcher(orderParam);
                 if (!matcher.find()) {
-                    throw new IllegalArgumentException("Invalid order syntax for part [" + orderPart + "]");
+                    throw new IllegalArgumentException("Invalid syntax of " +
+                            "the method [" + mappedMethod.getDeclaringClass().getName() + "." + mappedMethod.getName() + "] because order syntax [" + orderPart + "] is illegal");
                 }
                 String propertyString = matcher.group(1);
                 if (!fieldSet.contains(propertyString)) {
-                    throw new IllegalArgumentException("Invalid order syntax for part [" + orderPart + "]," +
-                            "the entity class does not have this property[" + propertyString + "]");
+                    throw new IllegalArgumentException("Invalid syntax of " +
+                            "the method [" + mappedMethod.getDeclaringClass().getName() + "." + mappedMethod.getName() + "] because order param [" + orderPart + "] is illegal");
                 }
                 sqlNode.append(KEYWORDS_ESCAPE_FUNCTION.apply(fieldMap
                         .get(propertyString).getColumnName())).append(" ").append(matcher.group(2)).append(FIELD_EXPRESSION_JOINT);

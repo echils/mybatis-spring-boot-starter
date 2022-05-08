@@ -1,7 +1,6 @@
 package com.github.mybatis;
 
-import com.github.mybatis.specification.DynamicMapper;
-import com.github.mybatis.specification.SpecificationMapper;
+import com.github.mybatis.specification.ExpandMapper;
 import com.github.mybatis.statement.ExpandStatementEnhancer;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.mapper.MapperFactoryBean;
@@ -29,28 +28,12 @@ public class MybatisExpandPostProcessor implements BeanPostProcessor {
 
         if (bean instanceof MapperFactoryBean) {
             MapperFactoryBean<?> mapperFactoryBean = (MapperFactoryBean<?>) bean;
-            if (needEnhance(mapperFactoryBean.getMapperInterface())) {
-                expandStatementEnhancer.enhance(mapperFactoryBean);
+            if (ExpandMapper.class.isAssignableFrom(mapperFactoryBean.getMapperInterface())
+                    && expandStatementEnhancer.enhance(mapperFactoryBean)) {
                 log.debug("Enhance mapper [{}] complete ", mapperFactoryBean.getMapperInterface().getName());
             }
         }
         return bean;
-    }
-
-    /**
-     * 验证是否需要增强
-     *
-     * @param mapperInterface 代验证的映射器
-     */
-    private boolean needEnhance(Class<?> mapperInterface) {
-        Class<?>[] interfaces = mapperInterface.getInterfaces();
-        for (Class<?> body : interfaces) {
-            if (body.isAssignableFrom(SpecificationMapper.class) ||
-                    body.isAssignableFrom(DynamicMapper.class) || needEnhance(body)) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

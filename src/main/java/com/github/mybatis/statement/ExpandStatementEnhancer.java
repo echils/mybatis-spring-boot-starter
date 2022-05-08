@@ -3,6 +3,7 @@ package com.github.mybatis.statement;
 import com.github.mybatis.MybatisExpandException;
 import com.github.mybatis.annotations.Where;
 import com.github.mybatis.specification.DynamicMapper;
+import com.github.mybatis.specification.ExpandMapper;
 import com.github.mybatis.specification.SpecificationMapper;
 import com.github.mybatis.statement.loader.*;
 import com.github.mybatis.statement.metadata.ColumnMetaData;
@@ -70,13 +71,13 @@ public class ExpandStatementEnhancer {
     /**
      * 对原生映射器进行增强，注册拓展功能
      */
-    public void enhance(MapperFactoryBean<?> mapperFactoryBean) {
+    public boolean enhance(MapperFactoryBean<?> mapperFactoryBean) {
 
         Class<?> mapperInterface = mapperFactoryBean.getMapperInterface();
         Optional<Class<?>> entityOptional = parseEntityClazz(mapperInterface);
         if (!entityOptional.isPresent()) {
-            throw new MybatisExpandException("The enhance mapper [{" +
-                    mapperInterface + "}] corresponding entity class is invalid");
+            log.warn("The enhance mapper [" + mapperInterface + "] corresponding entity class is invalid,will not to be enhance");
+            return false;
         }
 
         Class<?> entityClazz = entityOptional.get();
@@ -89,7 +90,7 @@ public class ExpandStatementEnhancer {
 
         if (isNecessaryOfPrimaryKey(mapperInterface) && !primaryKeyColumnOptional.isPresent()) {
             throw new MybatisExpandException("The entity class [" + entityClazz + "] has no primary key in the " +
-                    "corresponding table,please add primary key for it or use " +
+                    "corresponding table,please add primary key for it or use directly " +
                     "the expand mapper [" + DynamicMapper.class.getName() + "]");
         }
 
@@ -103,7 +104,7 @@ public class ExpandStatementEnhancer {
             statementLoaderOptional.ifPresent(
                     expandStatementLoader -> expandStatementLoader.load(mappedMetaData));
         });
-
+        return true;
     }
 
 
@@ -118,8 +119,7 @@ public class ExpandStatementEnhancer {
             if (genericInterface instanceof ParameterizedType) {
                 ParameterizedType parameterizedType = (ParameterizedType) genericInterface;
                 Class<?> parameterizedRawClazz = (Class<?>) parameterizedType.getRawType();
-                if (parameterizedRawClazz.isAssignableFrom(SpecificationMapper.class)
-                    || parameterizedRawClazz.isAssignableFrom(DynamicMapper.class)) {
+                if (ExpandMapper.class.isAssignableFrom(parameterizedRawClazz)) {
                     Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
                     Type actualTypeArgument = actualTypeArguments[actualTypeArguments.length - ENTITY_RAW_INDEX];
                     if (actualTypeArgument instanceof TypeVariable) {
@@ -134,7 +134,7 @@ public class ExpandStatementEnhancer {
                 }
             } else if (genericInterface instanceof Class) {
                 Optional<Class<?>> clazzOptional = parseEntityClazz((Class<?>) genericInterface);
-                if (clazzOptional.isPresent()) { return clazzOptional; }
+                if (clazzOptional.isPresent()) return clazzOptional;
             }
         }
         return Optional.empty();

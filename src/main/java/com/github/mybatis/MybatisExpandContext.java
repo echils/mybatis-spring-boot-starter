@@ -98,7 +98,7 @@ public class MybatisExpandContext {
      * 示例：HelloWorld-> hello_world
      */
     public static final Function<String, String> humpToUnderlineFunction = source -> {
-        if (StringUtils.isBlank(source)) { return source; }
+        if (StringUtils.isBlank(source)) return source;
         StringBuilder builder = new StringBuilder();
         char[] chars = source.toCharArray();
         char firstChar = chars[0];
@@ -120,7 +120,9 @@ public class MybatisExpandContext {
         char[] chars = source.toCharArray();
         boolean upper = first;
         for (char c : chars) {
-            if (c == '_') { upper = true; }else {
+            if (c == '_') {
+                upper = true;
+            } else {
                 builder.append(upper ? Character.toUpperCase(c) : c);
                 upper = false;
             }

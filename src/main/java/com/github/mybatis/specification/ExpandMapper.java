@@ -8,6 +8,6 @@ package com.github.mybatis.specification;
  * @param <T> 表对应的类
  * @author echils
  */
-interface ExpandMapper<T> {
+public interface ExpandMapper<T> {
 
 }

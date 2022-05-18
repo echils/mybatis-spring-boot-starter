@@ -73,6 +73,11 @@ public class MybatisExpandContext {
     public static final String MYBATIS_TEST_EXPRESSION = "%s != null";
 
     /**
+     * Mybatis XML 参数表达式
+     */
+    public static final String MYBATIS_COLLECTION_EXPRESSION = "%s != null && %s.size >0 ";
+
+    /**
      * MySQL 条件表达式
      */
     public static final String MYBATIS_WHERE_EXPRESSION = "WHERE";

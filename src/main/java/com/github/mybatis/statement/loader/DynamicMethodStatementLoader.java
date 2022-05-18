@@ -156,7 +156,7 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
                                                     .apply(fieldMap.get(property).getColumnName()) + conditionPart.expression),
                                             new ForEachSqlNode(configuration, new StaticTextSqlNode("#{item}"), paramItem,
                                                     null, "item", "(", ")", ","))),
-                                            String.format(MYBATIS_TEST_EXPRESSION, paramItem)));
+                                            String.format(MYBATIS_COLLECTION_EXPRESSION, paramItem, paramItem)));
                                     break;
                             }
 

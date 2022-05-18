@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.github.mybatis.MybatisExpandContext.KEYWORDS_ESCAPE_FUNCTION;
+import static com.github.mybatis.MybatisExpandContext.MYBATIS_COLLECTION_EXPRESSION;
 
 /**
  * 动态查询功能加载器
@@ -93,6 +94,12 @@ public class DynamicFindAllStatementLoader extends AbstractExpandStatementLoader
                 new ForEachSqlNode(configuration, new MixedSqlNode(Arrays.asList(
                         new TextSqlNode(" ${key.param} ${key.rule.value} "),
                         new ChooseSqlNode(Arrays.asList(
+                                new IfSqlNode(new ChooseSqlNode(Collections.singletonList(new IfSqlNode(
+                                        new ForEachSqlNode(configuration, new StaticTextSqlNode(" #{data} "),
+                                                "key.value", null, "data",
+                                                "(", ")", ","),
+                                        "key.value != null && key.value.size > 0")), new StaticTextSqlNode("('')")),
+                                        "key.rule.name =='IN' || key.rule.name =='NOT_IN'"),
                                 new IfSqlNode(new ForEachSqlNode(configuration, new StaticTextSqlNode(" #{data} "),
                                         "key.value", null, "data",
                                         "(", ")", ","), "key.rule.name =='IN' || key.rule.name =='NOT_IN'"),
@@ -103,7 +110,7 @@ public class DynamicFindAllStatementLoader extends AbstractExpandStatementLoader
                                 new StaticTextSqlNode("#{key.value}")),
                         new ChooseSqlNode(Collections.singletonList(new IfSqlNode(new TextSqlNode("${value}"),
                                 "value != null")), new StaticTextSqlNode(""))
-                )), expression, "key", "value", null, null, null))), expression + " != null");
+                )), expression, "key", "value", null, null, null))), String.format(MYBATIS_COLLECTION_EXPRESSION, expression, expression));
     }
 
 }

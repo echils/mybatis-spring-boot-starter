@@ -49,8 +49,11 @@ public class ExistByPrimaryKeyStatementLoader extends AbstractExpandStatementLoa
         if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
             sqlBuilder.append(" AND ").append(mappedMetaData.getWhereClause());
         }
+        List<ColumnMetaData> columnMetaDataList = tableMetaData.getColumnMetaDataList();
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                sqlBuilder.append(" AND ").append(columnMetaData.getColumnName()).append("=").append(columnMetaData.getExistValue()));
         List<ParameterMapping> parameterMappings = new LinkedList<>();
-        tableMetaData.getColumnMetaDataList().stream()
+        columnMetaDataList.stream()
                 .filter(ColumnMetaData::isPrimaryKey).forEach(columnMetaData -> {
             sqlBuilder.append(" AND ").append(KEYWORDS_ESCAPE_FUNCTION
                     .apply(columnMetaData.getColumnName())).append(" = ?");

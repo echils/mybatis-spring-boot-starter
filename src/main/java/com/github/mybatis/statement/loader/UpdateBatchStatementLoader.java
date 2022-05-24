@@ -5,6 +5,7 @@ import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.*;
@@ -37,6 +38,7 @@ public class UpdateBatchStatementLoader extends AbstractExpandStatementLoader {
 
     @Override
     SqlSource sqlSourceBuild(MappedMetaData mappedMetaData) {
+
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
         TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
@@ -50,18 +52,25 @@ public class UpdateBatchStatementLoader extends AbstractExpandStatementLoader {
                 .collect(Collectors.toList());
 
         columnMetaDataList.removeAll(primaryKeyColumnList);
-        List<SqlNode> setSqlNodeList = columnMetaDataList.stream().map(columnMetaData ->
-                new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + " = "
-                        + String.format(MYBATIS_PARAM_EXPRESSION, MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName(),
-                        columnMetaData.getJdbcType()) + ", ")).collect(Collectors.toList());
+        List<SqlNode> setSqlNodeList = columnMetaDataList.stream().filter(columnMetaData
+                -> columnMetaData.isUpdatable() && !columnMetaData.isLogical()).map(columnMetaData
+                -> new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + " = "
+                + (StringUtils.isNotBlank(columnMetaData.getDefaultUpdateValue()) ? columnMetaData.getDefaultUpdateValue() :
+                String.format(MYBATIS_PARAM_EXPRESSION, MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName(),
+                        columnMetaData.getJdbcType())) + ", ")).collect(Collectors.toList());
         sqlNodeList.add(new SetSqlNode(configuration, new TrimSqlNode(configuration, new MixedSqlNode(setSqlNodeList),
                 null, null, null, ",")));
 
         List<SqlNode> keySqlNodeList = new LinkedList<>();
         keySqlNodeList.add(new StaticTextSqlNode(" 1 = 1"));
+        if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
+            keySqlNodeList.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
+        }
         keySqlNodeList.addAll(primaryKeyColumnList.stream().map(columnMetaData ->
                 new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + String.format(MYBATIS_PARAM_EXPRESSION,
-                        MYBATIS_FOREACH_PARAM + "." +columnMetaData.getFieldName(), columnMetaData.getJdbcType()))).collect(Collectors.toList()));
+                        MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName(), columnMetaData.getJdbcType()))).collect(Collectors.toList()));
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                keySqlNodeList.add(new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + columnMetaData.getExistValue())));
         sqlNodeList.add(new WhereSqlNode(configuration, new MixedSqlNode(keySqlNodeList)));
 
         return new DynamicSqlSource(configuration, new ForEachSqlNode(configuration,

@@ -49,10 +49,12 @@ public class InsertStatementLoader extends AbstractExpandStatementLoader {
         for (ColumnMetaData columnMetaData : tableMetaData.getColumnMetaDataList()) {
             StaticTextSqlNode paramSqlNode = new StaticTextSqlNode(String.format(MYBATIS_PARAM_EXPRESSION,
                     columnMetaData.getFieldName(), columnMetaData.getJdbcType()) + ",");
-            paramSqlNodes.add(StringUtils.isNotBlank(columnMetaData.getDefaultInsertValue()) ?
+            String defaultValue = columnMetaData.isLogical() ?
+                    columnMetaData.getExistValue() : columnMetaData.getDefaultInsertValue();
+            paramSqlNodes.add(StringUtils.isNotBlank(defaultValue) ?
                     new ChooseSqlNode(Collections.singletonList(new IfSqlNode(paramSqlNode,
                             String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName()))),
-                            new StaticTextSqlNode(columnMetaData.getDefaultInsertValue() + ",")) : paramSqlNode);
+                            new StaticTextSqlNode(defaultValue + ",")) : paramSqlNode);
             columnSqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
         }
 
@@ -64,6 +66,7 @@ public class InsertStatementLoader extends AbstractExpandStatementLoader {
         sqlNodes.add(new TrimSqlNode(configuration,
                 new MixedSqlNode(paramSqlNodes), " VALUES (", null,
                 ")", ","));
+
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 

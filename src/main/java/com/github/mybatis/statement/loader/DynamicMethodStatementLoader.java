@@ -57,8 +57,11 @@ public class DynamicMethodStatementLoader extends AbstractExpandStatementLoader 
         if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
             sqlNodes.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
         }
-
+        List<ColumnMetaData> columnMetaDataList = tableMetaData.getColumnMetaDataList();
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                sqlNodes.add(new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + columnMetaData.getExistValue())));
         sqlNodes.addAll(buildSqlNode(configuration, mappedMetaData));
+
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 

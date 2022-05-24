@@ -1,7 +1,6 @@
 package com.github.mybatis.statement.metadata;
 
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,28 +30,6 @@ public class TableMetaData implements Cloneable {
      */
     private List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
 
-
-    /**
-     * 全局逻辑属性,当逻辑属性匹配时切换逻辑操作
-     */
-    private String logicalField;
-
-
-    /**
-     * 逻辑存在值
-     */
-    private String logicalExistValue = "0";
-
-
-    /**
-     * 逻辑删除值
-     */
-    private String logicalDeleteValue = "1";
-
-
-    public boolean enableLogical(){
-        return StringUtils.isNotBlank(logicalField);
-    }
 
     @Override
     protected TableMetaData clone() throws CloneNotSupportedException {

@@ -5,6 +5,8 @@ import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.*;
@@ -36,15 +38,34 @@ public class DeleteByPrimaryKeysStatementLoader extends AbstractExpandStatementL
 
     @Override
     SqlSource sqlSourceBuild(MappedMetaData mappedMetaData) {
+
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
         TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
-        List<SqlNode> sqlNodes = new LinkedList<>();
-        sqlNodes.add(new StaticTextSqlNode("DELETE FROM "));
-        sqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
-        sqlNodes.add(new StaticTextSqlNode(" WHERE 1=1"));
+        List<ColumnMetaData> columnMetaDataList = tableMetaData.getColumnMetaDataList();
+        List<ColumnMetaData> logicalColumns = columnMetaDataList
+                .stream().filter(ColumnMetaData::isLogical).collect(Collectors.toList());
 
-        List<ColumnMetaData> primaryKeyColumnDataList = tableMetaData.getColumnMetaDataList()
+        List<SqlNode> sqlNodes = new LinkedList<>();
+        if (CollectionUtils.isNotEmpty(logicalColumns)) {
+            StringBuilder sqlBuilder = new StringBuilder();
+            sqlBuilder.append("UPDATE ").append(KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName()));
+            logicalColumns.forEach(columnMetaData -> sqlBuilder.append(" SET ")
+                    .append(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()))
+                    .append(" = ").append(columnMetaData.getDeleteValue()));
+            sqlNodes.add(new StaticTextSqlNode(sqlBuilder.toString()));
+        } else {
+            sqlNodes.add(new StaticTextSqlNode("DELETE FROM "));
+            sqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
+        }
+
+        sqlNodes.add(new StaticTextSqlNode(" WHERE 1=1"));
+        if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
+            sqlNodes.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
+        }
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                sqlNodes.add(new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + columnMetaData.getExistValue())));
+        List<ColumnMetaData> primaryKeyColumnDataList = columnMetaDataList
                 .stream().filter(ColumnMetaData::isPrimaryKey).collect(Collectors.toList());
 
         //联合主键
@@ -54,9 +75,14 @@ public class DeleteByPrimaryKeysStatementLoader extends AbstractExpandStatementL
                     columnMetaData -> String.format(MYBATIS_PARAM_SIMPLE_EXPRESSION, MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName())));
             ArrayList<String> columns = new ArrayList<>();
             ArrayList<String> fields = new ArrayList<>();
-            primaryMap.forEach((key, value) -> { columns.add(key); fields.add(value); });
+            primaryMap.forEach((key, value) -> {
+                columns.add(key);
+                fields.add(value);
+            });
             ArrayList<String> blanks = new ArrayList<>();
-            for (int i = 0; i < primaryMap.keySet().size(); i++) { blanks.add("''");}
+            for (int i = 0; i < primaryMap.keySet().size(); i++) {
+                blanks.add("''");
+            }
             sqlNodes.add(new StaticTextSqlNode(" AND "));
             sqlNodes.add(new StaticTextSqlNode("(" + String.join(",", String.join(",", columns) + ") IN ")));
             sqlNodes.add(new ChooseSqlNode(Collections.singletonList(new IfSqlNode(
@@ -75,6 +101,7 @@ public class DeleteByPrimaryKeysStatementLoader extends AbstractExpandStatementL
                             "(", ")", ","),
                     "collection != null && collection.size > 0")), new StaticTextSqlNode("('')")));
         }
+
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 

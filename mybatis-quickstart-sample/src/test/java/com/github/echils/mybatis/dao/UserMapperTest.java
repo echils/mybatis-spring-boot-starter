@@ -37,13 +37,11 @@ public class UserMapperTest {
         user.setName("echils");
         user.setAge(25);
         user.setSex("男");
-        user.setLogical(true);
         user2 = new User();
         user2.setId("777");
         user2.setName("echils");
         user2.setAge(24);
         user2.setSex("女");
-        user2.setLogical(true);
     }
 
     @Test
@@ -94,7 +92,6 @@ public class UserMapperTest {
         user2.setAge(24);
         user2.setSex("女");
         user2.setCreateTime(new Date());
-        user2.setLogical(true);
         userMapper.update(user2);
     }
 
@@ -111,7 +108,6 @@ public class UserMapperTest {
     public void updateSelectiveBatch() {
         User user2 = new User();
         user2.setAge(18);
-        user2.setCreateTime(new Date());
         userMapper.updateSelectiveBatch(Arrays.asList("666", "777"), user2);
     }
 
@@ -123,11 +119,9 @@ public class UserMapperTest {
         user2.setAge(24);
         user2.setSex("女");
         user2.setCreateTime(new Date());
-        user2.setLogical(true);
 
         user.setAge(20);
         user.setCreateTime(new Date());
-        user.setLogical(false);
         userMapper.updateBatch(Arrays.asList(user2, user));
     }
 
@@ -143,7 +137,6 @@ public class UserMapperTest {
         dynamicParam.where(condition -> condition.rightLike("name", "ec"), DynamicParam.Joint.OR);
         dynamicParam.where(condition -> condition.gt("create_time", "2021-01-01"));
         dynamicParam.groupBy("id", "name");
-        dynamicParam.having(condition -> condition.eq("logical", "1"));
         dynamicParam.order("id", Order.Rule.ASC);
         dynamicParam.order(new Order("create_time", Order.Rule.ASC));
         dynamicParam.page(0, 1);

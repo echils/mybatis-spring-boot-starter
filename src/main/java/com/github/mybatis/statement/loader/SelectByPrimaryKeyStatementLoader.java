@@ -38,6 +38,7 @@ public class SelectByPrimaryKeyStatementLoader extends AbstractExpandStatementLo
 
     @Override
     SqlSource sqlSourceBuild(MappedMetaData mappedMetaData) {
+
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
         TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
@@ -50,14 +51,19 @@ public class SelectByPrimaryKeyStatementLoader extends AbstractExpandStatementLo
         if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
             sqlBuilder.append(" AND ").append(mappedMetaData.getWhereClause());
         }
+
+        List<ColumnMetaData> columnMetaDataList = tableMetaData.getColumnMetaDataList();
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                sqlBuilder.append(" AND ").append(columnMetaData.getColumnName()).append("=").append(columnMetaData.getExistValue()));
         List<ParameterMapping> parameterMappings = new LinkedList<>();
-        tableMetaData.getColumnMetaDataList().stream()
+        columnMetaDataList.stream()
                 .filter(ColumnMetaData::isPrimaryKey).forEach(columnMetaData -> {
             sqlBuilder.append(" AND ").append(KEYWORDS_ESCAPE_FUNCTION
                     .apply(columnMetaData.getColumnName())).append(" = ?");
             parameterMappings.add(new ParameterMapping.Builder(configuration, columnMetaData.getFieldName(),
                     columnMetaData.getJavaType()).jdbcType(columnMetaData.getJdbcType()).build());
         });
+
         return new StaticSqlSource(configuration, sqlBuilder.toString(), parameterMappings);
     }
 

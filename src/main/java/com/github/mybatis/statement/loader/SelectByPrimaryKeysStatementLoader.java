@@ -37,6 +37,7 @@ public class SelectByPrimaryKeysStatementLoader extends AbstractExpandStatementL
 
     @Override
     SqlSource sqlSourceBuild(MappedMetaData mappedMetaData) {
+
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
         TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
@@ -46,11 +47,16 @@ public class SelectByPrimaryKeysStatementLoader extends AbstractExpandStatementL
         sqlNodes.add(new StaticTextSqlNode(" FROM "
                 + KEYWORDS_ESCAPE_FUNCTION.apply(tableMetaData.getName())));
         sqlNodes.add(new StaticTextSqlNode(" WHERE 1=1"));
+
         if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
             sqlNodes.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
         }
-        List<ColumnMetaData> primaryKeyColumnDataList = tableMetaData.getColumnMetaDataList()
+        List<ColumnMetaData> columnMetaDataList = tableMetaData.getColumnMetaDataList();
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                sqlNodes.add(new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + columnMetaData.getExistValue())));
+        List<ColumnMetaData> primaryKeyColumnDataList = columnMetaDataList
                 .stream().filter(ColumnMetaData::isPrimaryKey).collect(Collectors.toList());
+
         //联合主键
         if (primaryKeyColumnDataList.size() > UNIQUE_PRIMARY_KEY_INDEX) {
             Map<String, String> primaryMap = primaryKeyColumnDataList.stream().collect(Collectors.toMap(
@@ -79,6 +85,7 @@ public class SelectByPrimaryKeysStatementLoader extends AbstractExpandStatementL
                             "(", ")", ","),
                     "collection != null && collection.size > 0")), new StaticTextSqlNode("('')")));
         }
+
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 

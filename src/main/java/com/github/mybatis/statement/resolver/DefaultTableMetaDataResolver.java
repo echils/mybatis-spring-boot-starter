@@ -1,13 +1,15 @@
 package com.github.mybatis.statement.resolver;
 
 import com.github.mybatis.MybatisExpandException;
+import com.github.mybatis.MybatisExpandProperties;
 import com.github.mybatis.annotations.Column;
-import com.github.mybatis.annotations.Table;
+import com.github.mybatis.annotations.Logical;
 import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MysqlTypeMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.type.JdbcType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,9 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
 
     @Autowired
     private ColumnNameResolver columnNameResolver;
+
+    @Autowired
+    private MybatisExpandProperties expandProperties;
 
     /**
      * 数据库类型支持性的校验只需进行一次即可
@@ -81,9 +86,48 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                     columnMetaData.setFieldName(field.getName());
                     Column columnAnnotation = field.getAnnotation(Column.class);
                     if (columnAnnotation != null) {
-                        columnMetaData.setDefaultInsertValue(columnAnnotation.defaultInsertValue());
-                        columnMetaData.setDefaultInsertValue(columnAnnotation.defaultUpdateValue());
+                        if (!UNDEFINED_LABEL.equals(columnAnnotation.defaultInsertValue())) {
+                            columnMetaData.setDefaultInsertValue(columnAnnotation.defaultInsertValue());
+                        }
+                        if (!UNDEFINED_LABEL.equals(columnAnnotation.defaultUpdateValue())) {
+                            columnMetaData.setDefaultUpdateValue(columnAnnotation.defaultUpdateValue());
+                        }
                         columnMetaData.setUpdatable(columnAnnotation.updatable());
+                    }
+                    Logical logicalAnnotation = field.getAnnotation(Logical.class);
+                    if (logicalAnnotation != null) {
+                        columnMetaData.setLogical(true);
+                        if (StringUtils.isBlank(logicalAnnotation.existValue())) {
+                            throw new MybatisExpandException("The entity [" +
+                                    tableMetaData.getEntityName() + "] logical field ["
+                                    + field.getName() + "] logical exist value is blank");
+
+                        }
+                        columnMetaData.setExistValue(logicalAnnotation.existValue());
+                        if (StringUtils.isBlank(logicalAnnotation.deleteValue())) {
+                            throw new MybatisExpandException("The entity [" +
+                                    tableMetaData.getEntityName() + "] logical field ["
+                                    + field.getName() + "] logical delete value is blank");
+                        }
+                        columnMetaData.setDeleteValue(logicalAnnotation.deleteValue());
+                    } else {
+                        if (expandProperties.enableGlobalLogical()) {
+                            MybatisExpandProperties.GlobalLogical globalLogical = expandProperties.getGlobalLogical();
+                            if (globalLogical.getLogicalField().equals(field.getName())) {
+                                columnMetaData.setLogical(true);
+                                if (StringUtils.isBlank(globalLogical.getLogicalExistValue())) {
+                                    throw new MybatisExpandException("The global logical field ["
+                                            + globalLogical.getLogicalField() + "] logical exist value is blank");
+
+                                }
+                                columnMetaData.setExistValue(globalLogical.getLogicalExistValue());
+                                if (StringUtils.isBlank(globalLogical.getLogicalDeleteValue())) {
+                                    throw new MybatisExpandException("The global logical field ["
+                                            + globalLogical.getLogicalField() + "] logical delete value is blank");
+                                }
+                                columnMetaData.setDeleteValue(globalLogical.getLogicalDeleteValue());
+                            }
+                        }
                     }
                     return columnMetaData;
                 })
@@ -93,19 +137,6 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                     columnMetaData.setPrimaryKey(databaseColumnInfo.isPrimaryKey());
                     columnMetaData.setJdbcType(databaseColumnInfo.getJdbcType());
                 }).collect(Collectors.toList()));
-
-        Table tableAnnotation = entityClazz.getAnnotation(Table.class);
-        if (tableAnnotation != null) {
-            String logicalField = tableAnnotation.logicalField();
-            if (tableMetaData.getColumnMetaDataList().stream().noneMatch(
-                    columnMetaData -> columnMetaData.getFieldName().equals(logicalField))) {
-                throw new MybatisExpandException("The entity [" +
-                        tableMetaData.getEntityName() + "] does not exist the logical field [" + logicalField + "]");
-            }
-            tableMetaData.setLogicalField(logicalField);
-            tableMetaData.setLogicalExistValue(tableAnnotation.existValue());
-            tableMetaData.setLogicalDeleteValue(tableAnnotation.deleteValue());
-        }
 
         return tableMetaData;
     }

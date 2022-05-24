@@ -39,7 +39,22 @@ public class ColumnMetaData implements Cloneable {
     /**
      * 是否允许更新
      */
-    private boolean updatable;
+    private boolean updatable = true;
+
+    /**
+     * 是否是逻辑列
+     */
+    private boolean logical;
+
+    /**
+     * 逻辑存在值
+     */
+    private String existValue;
+
+    /**
+     * 逻辑删除值
+     */
+    private String deleteValue;
 
     /**
      * 新增默认值

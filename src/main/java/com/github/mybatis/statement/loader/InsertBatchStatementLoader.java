@@ -50,10 +50,12 @@ public class InsertBatchStatementLoader extends AbstractExpandStatementLoader {
         for (ColumnMetaData columnMetaData : tableMetaData.getColumnMetaDataList()) {
             StaticTextSqlNode paramSqlNode = new StaticTextSqlNode(String.format(MYBATIS_PARAM_EXPRESSION,
                     MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName(), columnMetaData.getJdbcType()) + ",");
-            paramSqlNodes.add(StringUtils.isNotBlank(columnMetaData.getDefaultInsertValue()) ?
+            String defaultValue = columnMetaData.isLogical() ?
+                    columnMetaData.getExistValue() : columnMetaData.getDefaultInsertValue();
+            paramSqlNodes.add(StringUtils.isNotBlank(defaultValue) ?
                     new ChooseSqlNode(Collections.singletonList(new IfSqlNode(paramSqlNode,
                             String.format(MYBATIS_TEST_EXPRESSION, MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName()))),
-                            new StaticTextSqlNode(columnMetaData.getDefaultInsertValue() + ",")) : paramSqlNode);
+                            new StaticTextSqlNode(defaultValue + ",")) : paramSqlNode);
             columnSqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
         }
 
@@ -66,6 +68,7 @@ public class InsertBatchStatementLoader extends AbstractExpandStatementLoader {
                 new TrimSqlNode(configuration ,new MixedSqlNode(paramSqlNodes) ,"(" , null ,
                         ")" ,",") , "collection" ,null ,
                 MYBATIS_FOREACH_PARAM ,null ,null ,","));
+
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 

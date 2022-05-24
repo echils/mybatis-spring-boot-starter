@@ -1,8 +1,8 @@
 package com.github.echils.mybatis.model;
 
 import com.github.mybatis.annotations.Column;
+import com.github.mybatis.annotations.Logical;
 import com.github.mybatis.annotations.Table;
-import com.github.mybatis.annotations.Where;
 import lombok.Data;
 
 import java.util.Date;
@@ -13,8 +13,7 @@ import java.util.Date;
  * @author echils
  */
 @Data
-@Table(value = "`user`", logicalField = "logical", deleteValue = "0", existValue = "1")
-@Where(clause = "logical=true")
+@Table(value = "user")
 public class User {
 
     /**
@@ -54,9 +53,15 @@ public class User {
     private Date createTime;
 
     /**
+     * 创建时间
+     */
+    @Column(defaultUpdateValue = "NOW()")
+    private Date updateTime;
+
+    /**
      * 逻辑列
      */
-    @Column(defaultInsertValue = "true")
-    private Boolean logical;
+    @Logical
+    private Boolean removed;
 
 }

@@ -5,6 +5,7 @@ import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.scripting.xmltags.*;
@@ -37,6 +38,7 @@ public class UpdateSelectiveStatementLoader extends AbstractExpandStatementLoade
 
     @Override
     SqlSource sqlSourceBuild(MappedMetaData mappedMetaData) {
+
         Configuration configuration =
                 mappedMetaData.getMapperFactoryBean().getSqlSession().getConfiguration();
         TableMetaData tableMetaData = mappedMetaData.getTableMetaData();
@@ -50,9 +52,13 @@ public class UpdateSelectiveStatementLoader extends AbstractExpandStatementLoade
                 .collect(Collectors.toList());
 
         columnMetaDataList.removeAll(primaryKeyColumnList);
-        List<SqlNode> setSqlNodeList = columnMetaDataList.stream().map(columnMetaData ->
-                new IfSqlNode(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION
-                        .apply(columnMetaData.getColumnName()) + " = " + String.format(MYBATIS_PARAM_EXPRESSION,
+        List<SqlNode> setSqlNodeList = columnMetaDataList.stream().filter(columnMetaData
+                -> columnMetaData.isUpdatable() && !columnMetaData.isLogical()).map(columnMetaData
+                -> StringUtils.isNotBlank(columnMetaData.getDefaultUpdateValue()) ?
+                new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName())
+                        + " = " + columnMetaData.getDefaultUpdateValue() + ", ") :
+                new IfSqlNode(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName())
+                        + " = " + String.format(MYBATIS_PARAM_EXPRESSION,
                         columnMetaData.getFieldName(), columnMetaData.getJdbcType()) + ", "),
                         String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName())))
                 .collect(Collectors.toList());
@@ -61,10 +67,16 @@ public class UpdateSelectiveStatementLoader extends AbstractExpandStatementLoade
 
         List<SqlNode> keySqlNodeList = new LinkedList<>();
         keySqlNodeList.add(new StaticTextSqlNode(" 1 = 1"));
+        if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
+            keySqlNodeList.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
+        }
         keySqlNodeList.addAll(primaryKeyColumnList.stream().map(columnMetaData ->
                 new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + String.format(MYBATIS_PARAM_EXPRESSION,
                         columnMetaData.getFieldName(), columnMetaData.getJdbcType()))).collect(Collectors.toList()));
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                keySqlNodeList.add(new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + columnMetaData.getExistValue())));
         sqlNodeList.add(new WhereSqlNode(configuration, new MixedSqlNode(keySqlNodeList)));
+
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodeList));
     }
 

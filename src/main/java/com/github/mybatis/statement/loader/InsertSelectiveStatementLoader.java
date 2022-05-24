@@ -47,12 +47,13 @@ public class InsertSelectiveStatementLoader extends AbstractExpandStatementLoade
         for (ColumnMetaData columnMetaData : tableMetaData.getColumnMetaDataList()) {
             StaticTextSqlNode paramSqlNode = new StaticTextSqlNode(String.format(MYBATIS_PARAM_EXPRESSION,
                     columnMetaData.getFieldName(), columnMetaData.getJdbcType()) + ",");
-            String defaultValue = columnMetaData.getDefaultInsertValue();
+            String defaultValue = columnMetaData.isLogical() ?
+                    columnMetaData.getExistValue() : columnMetaData.getDefaultInsertValue();
             if (StringUtils.isNotBlank(defaultValue)) {
                 //有默认值时，此列不用不满足selective规则
                 paramSqlNodes.add(StringUtils.isNotBlank(defaultValue) ? new ChooseSqlNode(Collections.singletonList(
                         new IfSqlNode(paramSqlNode, String.format(MYBATIS_TEST_EXPRESSION, columnMetaData.getFieldName()))),
-                        new StaticTextSqlNode(columnMetaData.getDefaultInsertValue() + ",")) : paramSqlNode);
+                        new StaticTextSqlNode(defaultValue + ",")) : paramSqlNode);
                 columnSqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
             } else {
                 columnSqlNodes.add(new IfSqlNode(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","),
@@ -71,6 +72,7 @@ public class InsertSelectiveStatementLoader extends AbstractExpandStatementLoade
         sqlNodes.add(new TrimSqlNode(configuration,
                 new MixedSqlNode(paramSqlNodes), " VALUES (", null,
                 ")", ","));
+
         return new DynamicSqlSource(configuration, new MixedSqlNode(sqlNodes));
     }
 

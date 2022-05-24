@@ -1,6 +1,7 @@
 package com.github.mybatis.statement.loader;
 
 import com.github.mybatis.specification.DynamicMapper;
+import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MappedMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,9 @@ public class DynamicFindAllStatementLoader extends AbstractExpandStatementLoader
         if (StringUtils.isNotBlank(mappedMetaData.getWhereClause())) {
             sqlNodes.add(new StaticTextSqlNode(" AND " + mappedMetaData.getWhereClause()));
         }
+        List<ColumnMetaData> columnMetaDataList = tableMetaData.getColumnMetaDataList();
+        columnMetaDataList.stream().filter(ColumnMetaData::isLogical).forEach(columnMetaData ->
+                sqlNodes.add(new StaticTextSqlNode(" AND " + columnMetaData.getColumnName() + "=" + columnMetaData.getExistValue())));
 
         //DynamicParam#whereConditions属性
         sqlNodes.add(new IfSqlNode(new MixedSqlNode(Arrays.asList(new StaticTextSqlNode(" AND "),

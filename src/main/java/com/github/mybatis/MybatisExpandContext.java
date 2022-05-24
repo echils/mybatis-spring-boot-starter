@@ -17,6 +17,12 @@ import java.util.function.Function;
  */
 public class MybatisExpandContext {
 
+
+    /**
+     * 数据库类型-MySQL
+     */
+    public static final String EXPAND_PROPERTIES_PREFIX = "mybatis.enhance";
+
     /**
      * MYSQL关键字转义符
      */

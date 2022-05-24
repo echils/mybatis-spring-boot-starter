@@ -50,10 +50,10 @@ public class InsertBatchStatementLoader extends AbstractExpandStatementLoader {
         for (ColumnMetaData columnMetaData : tableMetaData.getColumnMetaDataList()) {
             StaticTextSqlNode paramSqlNode = new StaticTextSqlNode(String.format(MYBATIS_PARAM_EXPRESSION,
                     MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName(), columnMetaData.getJdbcType()) + ",");
-            paramSqlNodes.add(StringUtils.isNotBlank(columnMetaData.getDefaultValue()) ?
+            paramSqlNodes.add(StringUtils.isNotBlank(columnMetaData.getDefaultInsertValue()) ?
                     new ChooseSqlNode(Collections.singletonList(new IfSqlNode(paramSqlNode,
                             String.format(MYBATIS_TEST_EXPRESSION, MYBATIS_FOREACH_PARAM + "." + columnMetaData.getFieldName()))),
-                            new StaticTextSqlNode(columnMetaData.getDefaultValue() + ",")) : paramSqlNode);
+                            new StaticTextSqlNode(columnMetaData.getDefaultInsertValue() + ",")) : paramSqlNode);
             columnSqlNodes.add(new StaticTextSqlNode(KEYWORDS_ESCAPE_FUNCTION.apply(columnMetaData.getColumnName()) + ","));
         }
 

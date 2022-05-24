@@ -3,6 +3,7 @@ package com.github.mybatis;
 import com.github.mybatis.statement.ExpandStatementEnhancer;
 import com.github.mybatis.statement.resolver.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
  * @author echils
  */
 @Configuration
+@EnableConfigurationProperties(MybatisExpandProperties.class)
 public class MybatisExpandConfiguration {
 
 

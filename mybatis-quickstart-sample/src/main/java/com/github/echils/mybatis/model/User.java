@@ -13,7 +13,7 @@ import java.util.Date;
  * @author echils
  */
 @Data
-@Table(value = "`user`")
+@Table(value = "`user`", logicalField = "logical", deleteValue = "0", existValue = "1")
 @Where(clause = "logical=true")
 public class User {
 
@@ -50,13 +50,13 @@ public class User {
     /**
      * 创建时间
      */
-    @Column(value = "create_time", defaultValue = "NOW()")
+    @Column(value = "create_time", defaultInsertValue = "NOW()")
     private Date createTime;
 
     /**
      * 逻辑列
      */
-    @Column(defaultValue = "true")
+    @Column(defaultInsertValue = "true")
     private Boolean logical;
 
 }

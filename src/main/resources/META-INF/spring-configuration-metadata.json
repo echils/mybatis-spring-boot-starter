@@ -1,0 +1,37 @@
+{
+  "groups": [
+    {
+      "name": "mybatis.enhance",
+      "type": "com.github.mybatis.MybatisExpandProperties",
+      "sourceType": "com.github.mybatis.MybatisExpandProperties"
+    },
+    {
+      "name": "mybatis.enhance.global-logical",
+      "type": "com.github.mybatis.MybatisExpandProperties$GlobalLogical",
+      "sourceType": "com.github.mybatis.MybatisExpandProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "mybatis.enhance.global-logical.logical-delete-value",
+      "type": "java.lang.String",
+      "description": "逻辑删除值",
+      "sourceType": "com.github.mybatis.MybatisExpandProperties$GlobalLogical",
+      "defaultValue": "1"
+    },
+    {
+      "name": "mybatis.enhance.global-logical.logical-exist-value",
+      "type": "java.lang.String",
+      "description": "逻辑存在值",
+      "sourceType": "com.github.mybatis.MybatisExpandProperties$GlobalLogical",
+      "defaultValue": "0"
+    },
+    {
+      "name": "mybatis.enhance.global-logical.logical-field",
+      "type": "java.lang.String",
+      "description": "全局逻辑属性,当逻辑属性匹配时切换逻辑操作",
+      "sourceType": "com.github.mybatis.MybatisExpandProperties$GlobalLogical"
+    }
+  ],
+  "hints": []
+}

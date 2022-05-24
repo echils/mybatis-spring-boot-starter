@@ -6,3 +6,11 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
     username: root
     password: 123456
+
+
+mybatis:
+  enhance:
+    global-logical:
+      logical-field: removed
+      logical-exist-value: 0
+      logical-delete-value: 1

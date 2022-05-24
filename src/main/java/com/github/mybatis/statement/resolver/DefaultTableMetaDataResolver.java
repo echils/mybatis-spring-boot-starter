@@ -2,6 +2,7 @@ package com.github.mybatis.statement.resolver;
 
 import com.github.mybatis.MybatisExpandException;
 import com.github.mybatis.annotations.Column;
+import com.github.mybatis.annotations.Table;
 import com.github.mybatis.statement.metadata.ColumnMetaData;
 import com.github.mybatis.statement.metadata.MysqlTypeMetaData;
 import com.github.mybatis.statement.metadata.TableMetaData;
@@ -17,6 +18,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.github.mybatis.MybatisExpandContext.*;
@@ -39,7 +41,7 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
     /**
      * 数据库类型支持性的校验只需进行一次即可
      */
-    private boolean alreadyCheck;
+    private AtomicBoolean alreadyCheck = new AtomicBoolean(false);
 
     /**
      * 判断表是否存在的SQL
@@ -56,11 +58,13 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
 
     @Override
     public TableMetaData resolve(SqlSession sqlSession, Class<?> entityClazz) {
+
         checkDatabaseTypeSupported(sqlSession);
         String tableName = tableNameResolver.resolveTableName(entityClazz);
         if (!existTable(sqlSession, tableName)) {
             throw new MybatisExpandException("The table [" + tableName + "] does not exist in the database");
         }
+
         TableMetaData tableMetaData = new TableMetaData();
         tableMetaData.setName(tableName);
         tableMetaData.setEntityName(entityClazz.getSimpleName());
@@ -68,6 +72,7 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                 = obtainDatabaseColumnInfo(sqlSession, tableName).stream()
                 .collect(Collectors.toMap(DatabaseColumnInfo::getColumnName,
                         databaseColumnInfo -> databaseColumnInfo));
+
         tableMetaData.setColumnMetaDataList(obtainEntityFields(entityClazz).stream()
                 .map(field -> {
                     ColumnMetaData columnMetaData = new ColumnMetaData();
@@ -76,7 +81,9 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                     columnMetaData.setFieldName(field.getName());
                     Column columnAnnotation = field.getAnnotation(Column.class);
                     if (columnAnnotation != null) {
-                        columnMetaData.setDefaultValue(columnAnnotation.defaultValue());
+                        columnMetaData.setDefaultInsertValue(columnAnnotation.defaultInsertValue());
+                        columnMetaData.setDefaultInsertValue(columnAnnotation.defaultUpdateValue());
+                        columnMetaData.setUpdatable(columnAnnotation.updatable());
                     }
                     return columnMetaData;
                 })
@@ -86,6 +93,20 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                     columnMetaData.setPrimaryKey(databaseColumnInfo.isPrimaryKey());
                     columnMetaData.setJdbcType(databaseColumnInfo.getJdbcType());
                 }).collect(Collectors.toList()));
+
+        Table tableAnnotation = entityClazz.getAnnotation(Table.class);
+        if (tableAnnotation != null) {
+            String logicalField = tableAnnotation.logicalField();
+            if (tableMetaData.getColumnMetaDataList().stream().noneMatch(
+                    columnMetaData -> columnMetaData.getFieldName().equals(logicalField))) {
+                throw new MybatisExpandException("The entity [" +
+                        tableMetaData.getEntityName() + "] does not exist the logical field [" + logicalField + "]");
+            }
+            tableMetaData.setLogicalField(logicalField);
+            tableMetaData.setLogicalExistValue(tableAnnotation.existValue());
+            tableMetaData.setLogicalDeleteValue(tableAnnotation.deleteValue());
+        }
+
         return tableMetaData;
     }
 
@@ -93,7 +114,7 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
      * 判断数据库类型是否支持
      */
     private void checkDatabaseTypeSupported(SqlSession sqlSession) {
-        if (!alreadyCheck) {
+        if (!alreadyCheck.get()) {
             try (Connection connection = sqlSession.getConfiguration()
                     .getEnvironment().getDataSource().getConnection()) {
                 if (!connection.isClosed()) {
@@ -101,7 +122,7 @@ public class DefaultTableMetaDataResolver implements TableMetaDataResolver {
                     if (!(MySQL.equalsIgnoreCase(databaseType) || MariaDB.equalsIgnoreCase(databaseType))) {
                         throw new MybatisExpandException("This database type [" + databaseType + "] is not currently supported");
                     }
-                    alreadyCheck = true;
+                    alreadyCheck.compareAndSet(false, true);
                 }
             } catch (SQLException e) {
                 throw new MybatisExpandException(e);

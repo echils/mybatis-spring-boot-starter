@@ -37,9 +37,19 @@ public class ColumnMetaData implements Cloneable {
     private boolean primaryKey;
 
     /**
-     * 默认值
+     * 是否允许更新
      */
-    private String defaultValue;
+    private boolean updatable;
+
+    /**
+     * 新增默认值
+     */
+    private String defaultInsertValue;
+
+    /**
+     * 更新默认值
+     */
+    private String defaultUpdateValue;
 
 
     @Override

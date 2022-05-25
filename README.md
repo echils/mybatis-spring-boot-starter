@@ -42,17 +42,16 @@ import java.util.Date;
 /**
  * 用户表对应的实体类
  *
- * @Table  可以主动指定表名，如果不指定将会使用默认数据库解析策略解析，当然也可以通过实现接口{@link TableNameResolver}自定义解析规则
- * @Column 可以主动指定字段名，如果不指定将会使用默认数据库解析策略解析，当然也可以通过实现接口{@link ColumnNameResolver}自定义解析规则
- *         同时通过该注解可以配置新增时默认值,支持数据库函数。
- * @Where  指定全局默认查询条件，类型JPA
- *
+ * @Table   可以主动指定表名，如果不指定将会使用默认数据库解析策略解析，当然也可以通过实现接口{@link TableNameResolver}自定义解析规则
+ * @Column  可以主动指定字段名，如果不指定将会使用默认数据库解析策略解析，当然也可以通过实现接口{@link ColumnNameResolver}自定义解析规则
+ *          同时通过该注解可以配置新增时默认值,支持数据库函数。
+ * @Where   指定全局默认查询条件，类型JPA
+ * @Logical 指定逻辑列，优先级高于全局配置{@link com.github.mybatis.MybatisExpandProperties}
  *
  * @author echils
  */
 @Data
-@Table(value = "`user`")
-@Where(clause = "logical=true")
+@Table(value = "user")
 public class User {
 
     /**
@@ -68,7 +67,7 @@ public class User {
     /**
      * 年龄
      */
-    private int age;
+    private Integer age;
 
     /**
      * 性别
@@ -76,28 +75,35 @@ public class User {
     private String sex;
 
     /**
-     * 企业邮箱（数据库无此字段，解析时将会自动排除）
+     * 企业邮箱（数据库无此字段）
      */
     private String enterpriseMail;
 
     /**
-     * 手机号（数据库无此字段，解析时将会自动排除）
+     * 手机号（数据库无此字段）
      */
     private String telephone;
 
     /**
      * 创建时间
      */
-    @Column(value = "create_time", defaultValue = "NOW()")
+    @Column(value = "create_time", defaultInsertValue = "NOW()")
     private Date createTime;
+
+    /**
+     * 创建时间
+     */
+    @Column(defaultUpdateValue = "NOW()")
+    private Date updateTime;
 
     /**
      * 逻辑列
      */
-    @Column(defaultValue = "true")
-    private Boolean logical;
+    @Logical
+    private Boolean removed;
 
 }
+
 
 ````
 

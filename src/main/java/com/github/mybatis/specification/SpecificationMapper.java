@@ -95,7 +95,7 @@ public interface SpecificationMapper<ID, T> extends DynamicMapper<T> {
 
 
     /**
-     * 批量更新
+     * 批量更新:需配置allowMultiQueries=true时才提供功能
      *
      * @param entities 实体类集合
      */
